@@ -1,5 +1,6 @@
-.wrapper {
-  min-height: calc(100vh - 64px); 
+.page {
+  /* центрируем в пределах контентной области AppShell */
+  min-height: calc(100vh - 64px - 36px);
   display: grid;
   place-items: center;
   padding: 24px;
