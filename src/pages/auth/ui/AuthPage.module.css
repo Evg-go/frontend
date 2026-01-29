@@ -1,0 +1,26 @@
+.wrapper {
+  min-height: calc(100vh - 64px); 
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.title {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+}
+
+.footer {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
