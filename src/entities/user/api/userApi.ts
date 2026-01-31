@@ -11,16 +11,24 @@ export type UpdateMeDto = {
   first_name?: string;
   last_name?: string;
   phone?: string;
+
+  about?: string;
+  is_user_open_suggestions?: boolean;
+  is_profile_hidden?: boolean;
 };
 
-// Маппер: если кто-то передал camelCase, мы преобразуем в snake_case
+
 function toUpdateMeDto(input: Partial<User> | UpdateMeDto): UpdateMeDto {
   const any = input as any;
 
   return {
-    first_name: any.first_name ?? any.firstName,
-    last_name: any.last_name ?? any.lastName,
+    first_name: any.first_name,
+    last_name: any.last_name ,
     phone: any.phone,
+
+    about: any.about,
+    is_user_open_suggestions: any.is_user_open_suggestions,
+    is_profile_hidden: any.is_profile_hidden,
   };
 }
 
