@@ -35,7 +35,7 @@ function toUpdateMeDto(input: Partial<User> | UpdateMeDto): UpdateMeDto {
 
 export async function updateMe(dto: Partial<User> | UpdateMeDto): Promise<User> {
   const payload = toUpdateMeDto(dto);
-  const res = await httpClient.put<User>(endpoints.userProfile.updateMe, payload);
+  const res = await httpClient.patch<User>(endpoints.userProfile.updateMe, payload);
   return res.data;
 }
 

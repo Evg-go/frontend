@@ -36,7 +36,7 @@ export function UpdateProfileForm({
     const u: any = user;
 
     const isUserOpenSuggestions =
-      (u.is_user_open_suggestions ?? true) as boolean;
+      (u.is_user_open_suggestions ?? false) as boolean;
 
     const isProfileHidden =
       (u.is_profile_hidden ?? false) as boolean;

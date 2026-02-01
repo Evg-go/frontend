@@ -71,23 +71,23 @@ export function RegisterForm({ from }: { from?: string }) {
         <input {...form.register('email')} style={{ width: '100%', padding: 8 }} autoComplete="email" />
       </Field>
 
-      <Field label="First name" error={err.firstName?.message}>
+      <Field label="Имя" error={err.firstName?.message}>
         <input {...form.register('firstName')} style={{ width: '100%', padding: 8 }} autoComplete="given-name" />
       </Field>
 
-      <Field label="Last name" error={err.lastName?.message}>
+      <Field label="Фамилия" error={err.lastName?.message}>
         <input {...form.register('lastName')} style={{ width: '100%', padding: 8 }} autoComplete="family-name" />
       </Field>
 
-      <Field label="Phone" error={err.phone?.message}>
+      <Field label="Телефон" error={err.phone?.message}>
         <input {...form.register('phone')} style={{ width: '100%', padding: 8 }} autoComplete="tel" />
       </Field>
 
-      <Field label="Password" error={err.password?.message}>
+      <Field label="Пароль" error={err.password?.message}>
         <input {...form.register('password')} type="password" style={{ width: '100%', padding: 8 }} autoComplete="new-password" />
       </Field>
 
-      <Field label="Confirm password" error={err.passwordConfirm?.message}>
+      <Field label="Подтвердите пароль" error={err.passwordConfirm?.message}>
         <input {...form.register('passwordConfirm')} type="password" style={{ width: '100%', padding: 8 }} autoComplete="new-password" />
       </Field>
 

@@ -23,7 +23,7 @@ export function ProfilePage() {
   const phone = u.phone ?? '—';
 
   const about = u.about ?? '';
-  const isOpen = (u.is_user_open_suggestions ??  true) as boolean;
+  const isOpen = (u.is_user_open_suggestions ??  false) as boolean;
   const isHidden = (u.is_profile_hidden ?? false) as boolean;
 
   const competence = u.competence_levels;
