@@ -13,7 +13,7 @@ export const ProjectsPage = lazy(() =>
 );
 
 export const ProjectPage = lazy(() =>
-  import('@/pages/projects/ui/ProjectPage').then((m) => ({ default: m.ProjectPage })),
+  import('@/pages/projects/ui/ProjectDetailsPage').then((m) => ({ default: m.ProjectDetailsPage })),
 );
 
 export const TeamsPage = lazy(() =>
