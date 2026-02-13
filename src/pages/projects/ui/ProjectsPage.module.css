@@ -46,3 +46,100 @@
   font-size: 13px;
   margin-top: 6px;
 }
+
+.detailsCard {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.detailsTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.badge {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 18px; 
+  line-height: 1;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.badgeLabel {
+  opacity: 0.7;
+}
+
+.dates {
+  text-align: right;
+  font-size: 18px; 
+  line-height: 1.25;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+.name {
+  margin: 14px 0 0;
+  font-size: 28px; 
+  line-height: 1.15;
+}
+
+.desc {
+  margin-top: 10px;
+  font-size: 18px; 
+  line-height: 1.5;
+  opacity: 0.95;
+  white-space: pre-wrap;
+}
+
+.meta {
+  margin-top: 14px;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.badgeGreen {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.10);
+  color: rgba(225, 245, 234, 0.95);
+}
+
+.badgeRed {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.10);
+  color: rgba(250, 230, 230, 0.95);
+}
+
+.dates {
+  display: grid;
+  grid-template-columns: 7ch 1ch 10ch; /* label | : | value */
+  column-gap: 8px;
+  row-gap: 6px;
+  align-items: center;
+  justify-content: end;
+  font-size: 18px;
+  line-height: 1.25;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+.datesLabel {
+  opacity: 0.7;
+}
+
+.datesColon {
+  opacity: 0.7;
+}

@@ -39,3 +39,7 @@ export const ProfilePage = lazy(() =>
 export const CreateProjectPage = lazy(() =>
   import('@/pages/projects/ui/CreateProjectPage').then((m) => ({ default: m.CreateProjectPage })),
 );
+
+export const ProjectDetailsPage = lazy(() =>
+  import('@/pages/projects/ui/ProjectDetailsPage').then((m) => ({ default: m.ProjectDetailsPage })),
+);

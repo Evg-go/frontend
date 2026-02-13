@@ -15,6 +15,7 @@ import {
   NotFoundPage,
   ProfilePage,
   CreateProjectPage,
+  ProjectDetailsPage,
 } from './routes';
 
 function PageFallback() {
@@ -87,6 +88,16 @@ export function AppRouter() {
               </RequireAuth>
             }
           />
+
+          <Route
+            path="/projects/:projectId"
+            element={
+              <RequireAuth>
+                <ProjectDetailsPage />
+              </RequireAuth>
+            }
+          />
+          
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 

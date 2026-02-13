@@ -3,6 +3,8 @@ import { project_api } from '@/entities/project/api/projectApi';
 import { project_query_keys } from '@/entities/project/model/queryKeys';
 import type { create_project_body, project_status } from '@/entities/project/model/types';
 import { project_status as project_status_const } from '@/entities/project/model/types';
+import { httpClient } from '@/shared/api/httpClient';
+import { endpoints } from '@/shared/api/endpoints';
 
 export function use_public_projects(params: { query: string; status: project_status; page_size: number }) {
   const status_for_key = params.status ?? project_status_const.unspecified;
@@ -23,9 +25,13 @@ export function use_public_projects(params: { query: string; status: project_sta
 
 export function use_project(project_id: string) {
   return useQuery({
-    queryKey: project_query_keys.by_id(project_id),
-    queryFn: () => project_api.get_project(project_id),
+    queryKey: ['projects', 'byId', project_id],
+    queryFn: async () => {
+      const res = await httpClient.get(endpoints.projects.project_by_id(project_id));
+      return res.data;
+    },
     enabled: Boolean(project_id),
+    retry: false,
   });
 }
 

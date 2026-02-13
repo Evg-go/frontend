@@ -5,6 +5,7 @@ import cls from './ProjectsPage.module.css';
 import { use_public_projects } from '@/entities/project/model/hooks';
 import { project_status } from '@/entities/project/model/types';
 import { format_date } from '@/entities/project/lib/date';
+import { project_status_label } from '@/entities/project/lib/status';
 
 export function ProjectsPage() {
   const [query, set_query] = useState('');
@@ -52,7 +53,7 @@ export function ProjectsPage() {
               <Link key={p.id} to={`/projects/${p.id}`} className={cls.item}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                   <b>{p.name}</b>
-                  <span>{p.status}</span>
+                  <span>{project_status_label(p.status)}</span>
                 </div>
                 <div className={cls.itemDesc}>{p.description || '—'}</div>
                 <div style={{ opacity: 0.7, fontSize: 12 }}>
