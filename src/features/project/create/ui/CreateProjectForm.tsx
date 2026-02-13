@@ -5,34 +5,50 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { use_create_project } from '@/entities/project/model/hooks';
 import { project_status } from '@/entities/project/model/types';
-import { navigateTo } from '@/shared/lib/navigation/navigation';
+import { toApiError } from '@/shared/api/errors';
 
 const schema = z.object({
   name: z.string().min(1, 'Введите название'),
   description: z.string().optional(),
   team_name: z.string().optional(),
 
-  status: z.enum([project_status.not_started, project_status.in_progress, project_status.done, project_status.on_hold]),
+  status: z.enum([
+    project_status.not_started,
+    project_status.in_progress,
+    project_status.done,
+    project_status.on_hold,
+  ]),
   is_open: z.boolean(),
 
   started_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Формат: YYYY-MM-DD'),
-  finished_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Формат: YYYY-MM-DD').optional().or(z.literal('')),
+  finished_at: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Формат: YYYY-MM-DD')
+    .optional()
+    .or(z.literal('')),
 });
 
 type form_values = z.infer<typeof schema>;
 
-export function CreateProjectForm() {
+type Props = {
+  on_created?: () => void;
+};
+
+export function CreateProjectForm({ on_created }: Props) {
   const mutation = use_create_project();
 
-  const default_values = useMemo<form_values>(() => ({
-    name: '',
-    description: '',
-    team_name: '',
-    status: project_status.not_started,
-    is_open: true,
-    started_at: '',
-    finished_at: '',
-  }), []);
+  const default_values = useMemo<form_values>(
+    () => ({
+      name: '',
+      description: '',
+      team_name: '',
+      status: project_status.not_started,
+      is_open: true,
+      started_at: '',
+      finished_at: '',
+    }),
+    [],
+  );
 
   const form = useForm<form_values>({
     defaultValues: default_values,
@@ -40,17 +56,24 @@ export function CreateProjectForm() {
   });
 
   const on_submit = form.handleSubmit(async (values) => {
-    const created = await mutation.mutateAsync({
-      name: values.name,
-      description: values.description || '',
-      team_name: values.team_name || '',
-      status: values.status,
-      is_open: values.is_open,
-      started_at: values.started_at,
-      finished_at: values.finished_at ? values.finished_at : null,
-    });
+    try {
+      await mutation.mutateAsync({
+        name: values.name,
+        description: values.description || '',
+        team_name: values.team_name || '',
+        status: values.status,
+        is_open: values.is_open,
+        started_at: values.started_at,
+        finished_at: values.finished_at ? values.finished_at : null,
+      });
 
-    navigateTo(`/projects/${created.id}`, { replace: true });
+      // ✅ успех — сбрасываем форму и сообщаем родителю
+      form.reset(default_values);
+      on_created?.();
+    } catch (e) {
+      const apiErr = toApiError(e);
+      form.setError('root', { message: apiErr.message });
+    }
   });
 
   return (
@@ -100,11 +123,12 @@ export function CreateProjectForm() {
         </div>
       </div>
 
+      {form.formState.errors.root?.message && <div>{form.formState.errors.root.message}</div>}
+      {mutation.isError && !form.formState.errors.root?.message && <div>Ошибка создания проекта</div>}
+
       <button type="submit" disabled={mutation.isPending}>
         {mutation.isPending ? 'Создание...' : 'Создать проект'}
       </button>
-
-      {mutation.isError && <div>Ошибка создания проекта</div>}
     </form>
   );
 }

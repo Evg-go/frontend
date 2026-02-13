@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import cls from './AppShell.module.css';
 
 import { setNavigate } from '@/shared/lib/navigation/navigation';
@@ -9,6 +9,7 @@ import { LogoutButton } from '@/features/auth/logout/ui/LogoutButton';
 
 export function AppShell() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     setNavigate(navigate);
@@ -23,6 +24,12 @@ export function AppShell() {
     (me as any)?.username ??
     (me as any)?.id ??
     'me';
+
+  // ✅ показываем кнопку только если текущий путь относится к /projects
+  const showCreateProject = useMemo(() => {
+    const p = location.pathname;
+    return p === '/projects' || p.startsWith('/projects/');
+  }, [location.pathname]);
 
   return (
     <div className={cls.shell}>
@@ -39,7 +46,12 @@ export function AppShell() {
       </aside>
 
       <header className={cls.header}>
-        <Link to="/" style={{ fontWeight: 600, opacity: 0.95 }}>Dashboard</Link>
+        <div className={cls.actions}>
+          {isAuth && showCreateProject && (
+            <Link to="/projects/new">Создать проект</Link>
+          )}
+          {/* позже добавишь еще кнопки */}
+        </div>
 
         <div className={cls.right}>
           {isAuth && (

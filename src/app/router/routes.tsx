@@ -35,3 +35,7 @@ export const RegisterPage = lazy(() =>
 export const ProfilePage = lazy(() =>
   import('@/pages/profile/ui/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
+
+export const CreateProjectPage = lazy(() =>
+  import('@/pages/projects/ui/CreateProjectPage').then((m) => ({ default: m.CreateProjectPage })),
+);
