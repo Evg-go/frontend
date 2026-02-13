@@ -3,127 +3,108 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { toApiError } from '@/shared/api/errors';
-import { useCreateProject } from '../model/useCreateProject';
-import { parseDateInput } from '@/entities/project/lib/date';
-import { ProjectStatus } from '@/entities/project/model/types';
+import { use_create_project } from '@/entities/project/model/hooks';
+import { project_status } from '@/entities/project/model/types';
+import { navigateTo } from '@/shared/lib/navigation/navigation';
 
 const schema = z.object({
-  teamId: z.string().min(1, 'Введите team_id'),
-  name: z.string().min(1, 'Введите название проекта'),
-  description: z.string().optional().or(z.literal('')),
+  name: z.string().min(1, 'Введите название'),
+  description: z.string().optional(),
+  team_name: z.string().optional(),
 
-  status: z.nativeEnum(ProjectStatus).optional(),
-  isOpen: z.boolean(),
+  status: z.enum([project_status.not_started, project_status.in_progress, project_status.done, project_status.on_hold]),
+  is_open: z.boolean(),
 
-  startedAt: z.string().optional().or(z.literal('')),
-  finishedAt: z.string().optional().or(z.literal('')),
+  started_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Формат: YYYY-MM-DD'),
+  finished_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Формат: YYYY-MM-DD').optional().or(z.literal('')),
 });
 
-type FormValues = z.infer<typeof schema>;
+type form_values = z.infer<typeof schema>;
 
-export function CreateProjectForm(props: {
-  onCreated?: (createdId?: string) => void;
-  listParams?: Record<string, unknown>;
-}) {
-  const mutation = useCreateProject(props.listParams);
+export function CreateProjectForm() {
+  const mutation = use_create_project();
 
-  const defaultValues = useMemo<FormValues>(
-    () => ({
-      teamId: '',
-      name: '',
-      description: '',
-      status: ProjectStatus.PROJECT_STATUS_UNSPECIFIED,
-      isOpen: true,
-      startedAt: '',
-      finishedAt: '',
-    }),
-    [],
-  );
+  const default_values = useMemo<form_values>(() => ({
+    name: '',
+    description: '',
+    team_name: '',
+    status: project_status.not_started,
+    is_open: true,
+    started_at: '',
+    finished_at: '',
+  }), []);
 
-  const form = useForm<FormValues>({
-    defaultValues,
+  const form = useForm<form_values>({
+    defaultValues: default_values,
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = form.handleSubmit(async (values) => {
-    try {
-      const startedAt = values.startedAt ? parseDateInput(values.startedAt) : undefined;
-      const finishedAt = values.finishedAt ? parseDateInput(values.finishedAt) : undefined;
+  const on_submit = form.handleSubmit(async (values) => {
+    const created = await mutation.mutateAsync({
+      name: values.name,
+      description: values.description || '',
+      team_name: values.team_name || '',
+      status: values.status,
+      is_open: values.is_open,
+      started_at: values.started_at,
+      finished_at: values.finished_at ? values.finished_at : null,
+    });
 
-      const created = await mutation.mutateAsync({
-        teamId: values.teamId,
-        name: values.name,
-        description: values.description || undefined,
-        status: values.status ?? ProjectStatus.PROJECT_STATUS_UNSPECIFIED,
-        isOpen: values.isOpen,
-        startedAt,
-        finishedAt,
-      });
-
-      form.reset(defaultValues);
-      props.onCreated?.(created?.id);
-    } catch (e) {
-      const apiErr = toApiError(e);
-      form.setError('root', { message: apiErr.message });
-    }
+    navigateTo(`/projects/${created.id}`, { replace: true });
   });
 
   return (
-    <form onSubmit={onSubmit} style={{ display: 'grid', gap: 10 }}>
-      <Field label="Team ID" error={form.formState.errors.teamId?.message}>
-        <input {...form.register('teamId')} placeholder="UUID команды" />
-      </Field>
+    <form onSubmit={on_submit} style={{ display: 'grid', gap: 10 }}>
+      <div>
+        <div>Название</div>
+        <input {...form.register('name')} />
+        {form.formState.errors.name && <div>{form.formState.errors.name.message}</div>}
+      </div>
 
-      <Field label="Название" error={form.formState.errors.name?.message}>
-        <input {...form.register('name')} placeholder="Например: Marketplace" />
-      </Field>
-
-      <Field label="Описание" error={form.formState.errors.description?.message}>
+      <div>
+        <div>Описание</div>
         <textarea {...form.register('description')} rows={3} />
-      </Field>
+      </div>
 
-      <Field label="Статус">
+      <div>
+        <div>Team name (опционально)</div>
+        <input {...form.register('team_name')} />
+      </div>
+
+      <div>
+        <div>Статус</div>
         <select {...form.register('status')}>
-          <option value={ProjectStatus.PROJECT_STATUS_UNSPECIFIED}>Любой / не задан</option>
-          <option value={ProjectStatus.PROJECT_STATUS_PLANNED}>Planned</option>
-          <option value={ProjectStatus.PROJECT_STATUS_ACTIVE}>Active</option>
-          <option value={ProjectStatus.PROJECT_STATUS_PAUSED}>Paused</option>
-          <option value={ProjectStatus.PROJECT_STATUS_DONE}>Done</option>
-          <option value={ProjectStatus.PROJECT_STATUS_ARCHIVED}>Archived</option>
+          <option value={project_status.not_started}>NOT_STARTED</option>
+          <option value={project_status.in_progress}>IN_PROGRESS</option>
+          <option value={project_status.done}>DONE</option>
+          <option value={project_status.on_hold}>ON_HOLD</option>
         </select>
-      </Field>
+      </div>
 
-      <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <input type="checkbox" {...form.register('isOpen')} />
-        <span>Проект открыт (is_open)</span>
+      <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input type="checkbox" {...form.register('is_open')} />
+        Открытый проект (is_open)
       </label>
 
-      <Field label="Дата старта (started_at)">
-        <input type="date" {...form.register('startedAt')} />
-      </Field>
+      <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr' }}>
+        <div>
+          <div>Started at (YYYY-MM-DD)</div>
+          <input {...form.register('started_at')} placeholder="2026-02-11" />
+          {form.formState.errors.started_at && <div>{form.formState.errors.started_at.message}</div>}
+        </div>
 
-      <Field label="Дата завершения (finished_at)">
-        <input type="date" {...form.register('finishedAt')} />
-      </Field>
-
-      {form.formState.errors.root?.message && (
-        <div style={{ color: 'var(--danger)' }}>{form.formState.errors.root.message}</div>
-      )}
+        <div>
+          <div>Finished at (опционально)</div>
+          <input {...form.register('finished_at')} placeholder="2026-03-01" />
+          {form.formState.errors.finished_at && <div>{form.formState.errors.finished_at.message}</div>}
+        </div>
+      </div>
 
       <button type="submit" disabled={mutation.isPending}>
-        {mutation.isPending ? 'Создаём...' : 'Создать проект'}
+        {mutation.isPending ? 'Создание...' : 'Создать проект'}
       </button>
-    </form>
-  );
-}
 
-function Field(props: { label: string; error?: string; children: React.ReactNode }) {
-  return (
-    <div style={{ display: 'grid', gap: 6 }}>
-      <div style={{ fontSize: 13, color: 'var(--muted)' }}>{props.label}</div>
-      {props.children}
-      {props.error && <div style={{ color: 'var(--danger)' }}>{props.error}</div>}
-    </div>
+      {mutation.isError && <div>Ошибка создания проекта</div>}
+    </form>
   );
 }

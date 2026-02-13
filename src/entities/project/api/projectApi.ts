@@ -1,209 +1,129 @@
-import { httpClient } from '@/shared/api/httpClient';
 import { endpoints } from '@/shared/api/endpoints';
+import { httpClient } from '@/shared/api/httpClient';
+import type { create_project_payload } from '@/entities/project/api/types';
+
 import type {
-  CreateProjectInput,
-  DateMessage,
-  ListProjectsParams,
-  Project,
-} from '../model/types';
-import type { ProjectStatus as ProjectStatusType } from '../model/types';
-import { ProjectStatus } from '../model/types';
+  create_project_body,
+  list_public_projects_params,
+  list_public_projects_response,
+  project,
+  project_public,
+  project_status,
+} from '@/entities/project/model/types';
 
-type TimestampWire =
-  | string
-  | { seconds?: number | string; nanos?: number }
-  | null
-  | undefined;
+import { api_date_to_iso, iso_to_api_date } from '@/entities/project/lib/date';
+import { project_status_to_number, number_to_project_status } from '@/entities/project/model/types';
 
-type DateWire =
-  | { year?: number; month?: number; day?: number }
-  | null
-  | undefined;
-
-type ProjectWire = {
-  id?: string;
-
-  team_id?: string;
-
-  creator_id?: string;
-
-  name?: string;
-
-
-  status?: number | string;
-  is_open?: boolean;
-
-  started_at?: DateWire;
-
-  finished_at?: DateWire;
-
-  created_at?: TimestampWire;
-
-  updated_at?: TimestampWire;
-
-  [key: string]: unknown;
-};
-
-type ListProjectsResponseWire = {
-  projects?: ProjectWire[];
-  next_page_token?: string;
-
-  [key: string]: unknown;
-};
-
-function normalizeTimestamp(ts: TimestampWire): string | undefined {
-  if (!ts) return undefined;
-
-  if (typeof ts === 'string') return ts;
-
-  const secRaw = ts.seconds;
-  if (secRaw === undefined || secRaw === null) return undefined;
-
-  const sec = typeof secRaw === 'string' ? Number(secRaw) : secRaw;
-  if (!Number.isFinite(sec)) return undefined;
-
-  const d = new Date(sec * 1000);
-  return d.toISOString();
-}
-
-function normalizeDate(d: DateWire): DateMessage | undefined {
-  if (!d) return undefined;
-  const year = Number(d.year ?? 0);
-  const month = Number(d.month ?? 0);
-  const day = Number(d.day ?? 0);
-
-  if (!year || !month || !day) return undefined;
-  return { year, month, day };
-}
-
-function parseProjectStatus(v: unknown): ProjectStatusType {
-
+// Функция для нормализации статуса, если он приходит как число или строка
+function normalize_project_status(v: unknown): project_status {
   if (typeof v === 'number') {
     switch (v) {
-      case ProjectStatus.PROJECT_STATUS_UNSPECIFIED:
-      case ProjectStatus.PROJECT_STATUS_PLANNED:
-      case ProjectStatus.PROJECT_STATUS_ACTIVE:
-      case ProjectStatus.PROJECT_STATUS_PAUSED:
-      case ProjectStatus.PROJECT_STATUS_DONE:
-      case ProjectStatus.PROJECT_STATUS_ARCHIVED:
-        return v;
-      default:
-        return ProjectStatus.PROJECT_STATUS_UNSPECIFIED;
+      case 1: return 'not_started';
+      case 2: return 'in_progress';
+      case 3: return 'done';
+      case 4: return 'on_hold';
+      default: return 'unspecified';
     }
   }
 
   if (typeof v === 'string') {
-    switch (v) {
-      case 'PROJECT_STATUS_PLANNED':
-        return ProjectStatus.PROJECT_STATUS_PLANNED;
-      case 'PROJECT_STATUS_ACTIVE':
-        return ProjectStatus.PROJECT_STATUS_ACTIVE;
-      case 'PROJECT_STATUS_PAUSED':
-        return ProjectStatus.PROJECT_STATUS_PAUSED;
-      case 'PROJECT_STATUS_DONE':
-        return ProjectStatus.PROJECT_STATUS_DONE;
-      case 'PROJECT_STATUS_ARCHIVED':
-        return ProjectStatus.PROJECT_STATUS_ARCHIVED;
-      case 'PROJECT_STATUS_UNSPECIFIED':
-      default:
-        return ProjectStatus.PROJECT_STATUS_UNSPECIFIED;
-    }
+    const s = v.toUpperCase();
+
+    if (s.endsWith('NOT_STARTED')) return 'not_started';
+    if (s.endsWith('IN_PROGRESS')) return 'in_progress';
+    if (s.endsWith('DONE')) return 'done';
+    if (s.endsWith('ON_HOLD')) return 'on_hold';
+
+    if (s.endsWith('UNSPECIFIED')) return 'unspecified';
   }
 
-  return ProjectStatus.PROJECT_STATUS_UNSPECIFIED;
+  return 'unspecified';
 }
 
-function fromWireProject(p: ProjectWire): Project {
-  const id = String(p.id ?? '');
-
-  const teamId = String(p.team_id ?? '');
-  const creatorId = String(p.creator_id ?? '');
-
-  const name = String(p.name ?? '');
-  const description = String(p.description ?? '');
-
-  const isOpen = p.is_open ?? false;
-
-  const startedAt = normalizeDate((p.started_at) as DateWire);
-  const finishedAt = normalizeDate((p.finished_at) as DateWire);
-
-  const createdAt = normalizeTimestamp((p.created_at) as TimestampWire);
-  const updatedAt = normalizeTimestamp((p.updated_at) as TimestampWire);
-
-  const status = parseProjectStatus(p.status);
-
+function map_project_public(raw: any): project_public {
   return {
-  ...p,
-    id,
-    teamId,
-    creatorId,
-    name,
-    description,
-    status,
-    isOpen,
+    id: String(raw.id),
+    team_id: String(raw.team_id),
+    name: String(raw.name),
+    description: String(raw.description ?? ''),
+    status: normalize_project_status(raw.status),
+    is_open: Boolean(raw.is_open),
 
-    startedAt,
-    finishedAt,
+    started_at: api_date_to_iso(raw.started_at),
+    finished_at: api_date_to_iso(raw.finished_at),
 
-    createdAt,
-    updatedAt,
+    created_at: api_date_to_iso(raw.created_at),
   };
 }
 
-
-export async function listProjects(params?: ListProjectsParams): Promise<{
-  projects: Project[];
-  nextPageToken?: string;
-}> {
-  const queryParams: Record<string, any> = {
-    team_id: params?.teamId ?? '',
-    creator_id: params?.creatorId ?? '',
-    status: params?.status ?? 0,
-    only_open: params?.onlyOpen ?? false,
-    query: params?.query ?? '',
-    page_size: params?.pageSize ?? 20,
-    page_token: params?.pageToken ?? '',
-  };
-
-  // убираем пустые строки, чтобы не засорять query
-  Object.keys(queryParams).forEach((k) => {
-    if (queryParams[k] === '') delete queryParams[k];
-  });
-
-  const res = await httpClient.get<ListProjectsResponseWire>(endpoints.projects.list, {
-    params: queryParams,
-  });
-
-  const data = res.data ?? {};
-  const items = Array.isArray(data.projects) ? data.projects : [];
-  const nextPageToken = data.next_page_token ?? data.nextPageToken;
-
+function map_project(raw: any): project {
   return {
-    projects: items.map(fromWireProject),
-    nextPageToken: nextPageToken ? String(nextPageToken) : undefined,
+    id: String(raw.id),
+    team_id: String(raw.team_id),
+    creator_id: String(raw.creator_id),
+
+    name: String(raw.name),
+    description: String(raw.description ?? ''),
+
+    status: normalize_project_status(raw.status),
+    is_open: Boolean(raw.is_open),
+
+    started_at: api_date_to_iso(raw.started_at),
+    finished_at: api_date_to_iso(raw.finished_at),
+
+    created_at: api_date_to_iso(raw.created_at),
+    updated_at: api_date_to_iso(raw.updated_at),
   };
 }
 
-export async function getProjectById(projectId: string): Promise<Project> {
-  const res = await httpClient.get<ProjectWire>(endpoints.projects.byId(projectId));
-  return fromWireProject(res.data ?? {});
-}
+export const project_api = {
+  // Получение списка проектов с фильтрацией
+  async list_public_projects(params: list_public_projects_params): Promise<list_public_projects_response> {
+    const search = new URLSearchParams();
 
-export async function createProject(input: CreateProjectInput): Promise<Project> {
-  // CreateProjectRequest по proto:
-  // team_id, creator_id (лучше из ctx), name, description, status, is_open, started_at, finished_at
+    if (params.query) search.set('query', params.query);
 
-  const body: Record<string, any> = {
-    team_id: input.teamId,
-    name: input.name,
-    description: input.description ?? '',
-    status: input.status ?? 0,
-    is_open: input.isOpen ?? true,
-  };
+    // статус: если UNSPECIFIED/undefined => не шлем
+    if (params.status && params.status !== 'unspecified') {
+      // Передаем статус как число
+      search.set('status', String(project_status_to_number(params.status)));
+    }
 
-  if (input.startedAt) body.started_at = input.startedAt;
-  if (input.finishedAt) body.finished_at = input.finishedAt;
+    if (params.page_size) search.set('page_size', String(params.page_size));
+    if (params.page_token) search.set('page_token', params.page_token);
 
-  const res = await httpClient.post<ProjectWire>(endpoints.projects.create, body);
-  return fromWireProject(res.data ?? {});
-}
+    const url = `${endpoints.projects.projects_public}?${search.toString()}`;
+
+     const res = await httpClient.get<list_public_projects_response>(url, { withCredentials: true });
+
+    return {
+     projects: Array.isArray(res.data.projects) ? res.data.projects.map(map_project_public) : [],
+      next_page_token: String(res.data.next_page_token ?? ''),
+    };
+  },
+
+  // Получение проекта по ID
+  async get_project(project_id: string): Promise<project> {
+    const res = await httpClient.get(endpoints.projects.project_by_id(project_id));
+    return map_project(res.data);
+  },
+
+  async create_project(body: create_project_body): Promise<project> {
+    // Формируем объект payload для отправки на бэк
+    const payload: create_project_payload = {
+      name: body.name,
+      description: body.description ?? '',
+      status: project_status_to_number(body.status),  // Конвертируем статус в число
+      is_open: body.is_open,
+      started_at: iso_to_api_date(body.started_at),
+      finished_at: body.finished_at ? iso_to_api_date(body.finished_at) : undefined,
+      team_name: body.team_name ?? '',
+    };
+
+    // Отправляем запрос на создание проекта
+    const res = await httpClient.post(endpoints.projects.projects, payload);
+
+    // Возвращаем полученные данные, преобразованные в нужный тип
+    return map_project(res.data);
+  },
+};

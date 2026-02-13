@@ -1,21 +1,34 @@
-import type { DateMessage } from '../model/types';
+import type { api_date } from '@/entities/project/model/types';
 
-export function parseDateInput(value: string): DateMessage | undefined {
-  // ожидаем YYYY-MM-DD
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+function pad2(v: number) {
+  return String(v).padStart(2, '0');
+}
+
+export function api_date_to_iso(v: unknown): string | null {
+  if (!v) return null;
+
+  if (typeof v === 'string') return v;
+
+  const d = v as Partial<api_date>;
+  if (!d.year || !d.month || !d.day) return null;
+
+  return `${d.year}-${pad2(d.month)}-${pad2(d.day)}`;
+}
+
+export function iso_to_api_date(iso: string | null | undefined): api_date | undefined {
+  if (!iso) return undefined;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!m) return undefined;
 
   const year = Number(m[1]);
   const month = Number(m[2]);
   const day = Number(m[3]);
 
-  if (!year || month < 1 || month > 12 || day < 1 || day > 31) return undefined;
+  if (!year || !month || !day) return undefined;
   return { year, month, day };
 }
 
-export function formatDate(d?: DateMessage): string {
-  if (!d) return '';
-  const mm = String(d.month).padStart(2, '0');
-  const dd = String(d.day).padStart(2, '0');
-  return `${d.year}-${mm}-${dd}`;
+export function format_date(iso: string | null | undefined): string {
+  return iso ? iso : '—';
 }
+

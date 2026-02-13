@@ -1,130 +1,81 @@
-import { Link, useNavigate } from 'react-router-dom';
 import { useMemo, useState } from 'react';
-
+import { Link } from 'react-router-dom';
 import cls from './ProjectsPage.module.css';
 
-import { useProjects } from '@/entities/project/model/hooks';
-import { ProjectStatus } from '@/entities/project/model/types';
+import { use_public_projects } from '@/entities/project/model/hooks';
+import { project_status } from '@/entities/project/model/types';
+import { format_date } from '@/entities/project/lib/date';
 import { CreateProjectForm } from '@/features/project/create/ui/CreateProjectForm';
-import { formatDate } from '@/entities/project/lib/date';
 
 export function ProjectsPage() {
-  const navigate = useNavigate();
+  const [query, set_query] = useState('');
+  const [status, set_status] = useState(project_status.unspecified);
 
-  const [teamId, setTeamId] = useState('');
-  const [query, setQuery] = useState('');
-  const [onlyOpen, setOnlyOpen] = useState(false);
-  const [status, setStatus] = useState<ProjectStatus>(ProjectStatus.PROJECT_STATUS_UNSPECIFIED);
+  const params = useMemo(() => ({
+    query,
+    status,
+    page_size: 10,
+  }), [query, status]);
 
-  const listParams = useMemo(
-    () => ({
-      teamId: teamId || undefined,
-      query: query || undefined,
-      onlyOpen,
-      status,
-      pageSize: 20,
-    }),
-    [teamId, query, onlyOpen, status],
-  );
+  const q = use_public_projects(params);
 
-  const qList = useProjects(listParams);
-  const projects = qList.data?.projects ?? [];
-  const nextPageToken = qList.data?.nextPageToken;
+  const projects = q.data?.pages.flatMap((p) => p.projects) ?? [];
 
   return (
     <div className={cls.page}>
       <div className={cls.header}>
         <h3 className={cls.title}>Проекты</h3>
-        <button onClick={() => qList.refetch()} disabled={qList.isFetching}>
-          {qList.isFetching ? 'Обновляем...' : 'Обновить'}
-        </button>
       </div>
 
-      <div className={cls.card}>
-        <h3 className={cls.title}>Фильтры</h3>
-        <div style={{ display: 'grid', gap: 10, marginTop: 10 }}>
-          <Field label="Team ID">
-            <input value={teamId} onChange={(e) => setTeamId(e.target.value)} placeholder="UUID команды" />
-          </Field>
-
-          <Field label="Поиск (query)">
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="название/описание" />
-          </Field>
-
-          <Field label="Статус">
-            <select value={status} onChange={(e) => setStatus(Number(e.target.value) as ProjectStatus)}>
-              <option value={ProjectStatus.PROJECT_STATUS_UNSPECIFIED}>Any</option>
-              <option value={ProjectStatus.PROJECT_STATUS_PLANNED}>PLANNED</option>
-              <option value={ProjectStatus.PROJECT_STATUS_ACTIVE}>ACTIVE</option>
-              <option value={ProjectStatus.PROJECT_STATUS_PAUSED}>PAUSED</option>
-              <option value={ProjectStatus.PROJECT_STATUS_DONE}>DONE</option>
-              <option value={ProjectStatus.PROJECT_STATUS_ARCHIVED}>ARCHIVED</option>
-            </select>
-          </Field>
-
-          <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <input type="checkbox" checked={onlyOpen} onChange={(e) => setOnlyOpen(e.target.checked)} />
-            <span>Только открытые (only_open)</span>
-          </label>
-
-          {nextPageToken && <div style={{ color: 'var(--muted)' }}>next_page_token: {nextPageToken}</div>}
-        </div>
+      <div className={cls.card} style={{ display: 'grid', gap: 12 }}>
+        <CreateProjectForm />
       </div>
 
-      <div className={cls.card}>
-        <h3 className={cls.title}>Создать проект</h3>
-        <div style={{ marginTop: 10 }}>
-          <CreateProjectForm
-            listParams={listParams as any}
-            onCreated={(id) => {
-              if (id) navigate(`/projects/${id}`);
-              else qList.refetch();
-            }}
+      <div className={cls.card} style={{ display: 'grid', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <input
+            value={query}
+            onChange={(e) => set_query(e.target.value)}
+            placeholder="Поиск..."
           />
+
+          <select value={status} onChange={(e) => set_status(e.target.value as any)}>
+            <option value={project_status.unspecified}>Любой статус</option>
+            <option value={project_status.not_started}>NOT_STARTED</option>
+            <option value={project_status.in_progress}>IN_PROGRESS</option>
+            <option value={project_status.done}>DONE</option>
+            <option value={project_status.on_hold}>ON_HOLD</option>
+          </select>
         </div>
-      </div>
 
-      <div className={cls.card}>
-        <h3 className={cls.title}>Список</h3>
+        {q.isLoading && <div>Загрузка...</div>}
+        {q.isError && <div>Ошибка загрузки списка</div>}
 
-        {qList.isLoading && <div style={{ marginTop: 10 }}>Загрузка...</div>}
-        {qList.isError && <div style={{ marginTop: 10 }}>Ошибка загрузки проектов</div>}
+        {!q.isLoading && !q.isError && projects.length === 0 && <div>Ничего не найдено</div>}
 
-        {!qList.isLoading && !qList.isError && projects.length === 0 && (
-          <div style={{ marginTop: 10, color: 'var(--muted)' }}>Пока проектов нет</div>
-        )}
-
-        {!qList.isLoading && !qList.isError && projects.length > 0 && (
-          <div className={cls.list} style={{ marginTop: 10 }}>
+        {!q.isLoading && !q.isError && projects.length > 0 && (
+          <div style={{ display: 'grid', gap: 10 }}>
             {projects.map((p) => (
-              <div key={p.id} className={cls.item}>
-                <div className={cls.itemTitle}>
-                  <Link to={`/projects/${p.id}`}>{p.name || p.id}</Link>
+              <Link key={p.id} to={`/projects/${p.id}`} className={cls.item}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                  <b>{p.name}</b>
+                  <span>{p.status}</span>
                 </div>
-
-                <div className={cls.itemDesc}>
-                  {p.description || '—'}
+                <div className={cls.itemDesc}>{p.description || '—'}</div>
+                <div style={{ opacity: 0.7, fontSize: 12 }}>
+                  started: {format_date(p.started_at)} • created: {format_date(p.created_at)}
                 </div>
-
-                <div className={cls.itemDesc} style={{ marginTop: 8 }}>
-                  Team: {p.teamId || '—'} • Open: {p.isOpen ? 'Yes' : 'No'} • Status: {p.status}
-                  <br />
-                  Started: {formatDate(p.startedAt)} • Finished: {formatDate(p.finishedAt)}
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
-      </div>
-    </div>
-  );
-}
 
-function Field(props: { label: string; children: React.ReactNode }) {
-  return (
-    <div style={{ display: 'grid', gap: 6 }}>
-      <div style={{ fontSize: 13, color: 'var(--muted)' }}>{props.label}</div>
-      {props.children}
+        {q.hasNextPage && (
+          <button onClick={() => q.fetchNextPage()} disabled={q.isFetchingNextPage}>
+            {q.isFetchingNextPage ? 'Загрузка...' : 'Показать ещё'}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

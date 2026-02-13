@@ -8,10 +8,8 @@ export const endpoints = {
     updateMe: '/users/me', 
   },
   projects: {
-    list: '/projects',
-    create: '/projects',
-    byId: (projectId: string) => `/projects/${projectId}`,
-    update: (projectId: string) => `/projects/${projectId}`,
-    delete: (projectId: string) => `/projects/${projectId}`,
+    projects: '/projects',
+    projects_public: '/projects/public',
+    project_by_id: (project_id: string) => `/projects/${project_id}`,
   },
 };
