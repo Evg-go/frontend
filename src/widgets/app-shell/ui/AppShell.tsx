@@ -25,7 +25,7 @@ export function AppShell() {
     (me as any)?.id ??
     'me';
 
-  // ✅ показываем кнопку только если текущий путь относится к /projects
+
   const showCreateProject = useMemo(() => {
     const p = location.pathname;
     return p === '/projects' || p.startsWith('/projects/');
@@ -34,7 +34,6 @@ export function AppShell() {
   return (
     <div className={cls.shell}>
       <aside className={cls.sidebar}>
-        <div className={cls.brand}>My Project</div>
         <nav className={cls.nav}>
           <NavLink to="/">Home</NavLink>
           <NavLink to="/projects">Projects</NavLink>
@@ -50,7 +49,7 @@ export function AppShell() {
           {isAuth && showCreateProject && (
             <Link to="/projects/new">Создать проект</Link>
           )}
-          {/* позже добавишь еще кнопки */}
+            <Link to="/projects/my">Мои проекты</Link>
         </div>
 
         <div className={cls.right}>

@@ -7,3 +7,9 @@ export const project_query_keys = {
   by_id: (project_id: string) =>
     [...project_query_keys.root, 'by_id', project_id] as const,
 };
+
+
+export const projectQueryKeys = {
+  list: () => ['projects', 'list'] as const, 
+  byId: (id: string) => ['projects', 'byId', id] as const,
+};

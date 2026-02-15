@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { project_api } from '@/entities/project/api/projectApi';
-import { project_query_keys } from '@/entities/project/model/queryKeys';
+import { project_query_keys, projectQueryKeys } from '@/entities/project/model/queryKeys';
 import type { create_project_body, project_status } from '@/entities/project/model/types';
 import { project_status as project_status_const } from '@/entities/project/model/types';
 import { httpClient } from '@/shared/api/httpClient';
@@ -41,3 +41,16 @@ export function use_create_project() {
   });
 }
 
+export function use_my_projects(opts?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: projectQueryKeys.list(), 
+    queryFn: async () => {
+      const res = await httpClient.get(endpoints.projects.projects, {
+        params: { query: '', page_size: 10 },  // Параметры для поиска
+      });
+      return res.data.projects;
+    },
+    enabled: opts?.enabled ?? true,
+    retry: false,
+  });
+}

@@ -60,12 +60,12 @@ export function ProjectDetailsPage() {
               </div>
 
               <div className={cls.dates}>
-                <div className={cls.datesLabel}>Started </div>
-                <div className={cls.datesColon}>:</div>
+                <div className={cls.datesLabel}>Начало</div>
+                <div className={cls.datesColon}> :</div>
                 <div>{started}</div>
 
-                <div className={cls.datesLabel}>Finished</div>
-                <div className={cls.datesColon}>:</div>
+                <div className={cls.datesLabel}>Закончен</div>
+                <div className={cls.datesColon}> :</div>
                 <div>{finished}</div>
               </div>
             </div>

@@ -68,3 +68,9 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.actions {
+  display: flex;
+  gap: 120px; /* промежуток между кнопками */
+  align-items: center;
+}

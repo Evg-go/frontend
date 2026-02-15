@@ -16,6 +16,7 @@ import {
   ProfilePage,
   CreateProjectPage,
   ProjectDetailsPage,
+  MyProjectsPage,
 } from './routes';
 
 function PageFallback() {
@@ -97,6 +98,16 @@ export function AppRouter() {
               </RequireAuth>
             }
           />
+
+          <Route
+            path="/projects/my"
+            element={
+              <RequireAuth>
+                <MyProjectsPage />
+              </RequireAuth>
+            }
+          />
+
           
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
