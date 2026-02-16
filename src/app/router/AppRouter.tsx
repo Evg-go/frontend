@@ -110,7 +110,7 @@ export function AppRouter() {
           />
 
           <Route
-            path="/projects/:projectId"
+            path="/projects/edit/:projectId"
             element={
               <RequireAuth>
                 <EditProjectPage />
