@@ -1,10 +1,11 @@
-import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, type UseMutationResult } from '@tanstack/react-query';
 import { project_api } from '@/entities/project/api/projectApi';
 import { project_query_keys, projectQueryKeys } from '@/entities/project/model/queryKeys';
 import type { create_project_body, project_status } from '@/entities/project/model/types';
 import { project_status as project_status_const } from '@/entities/project/model/types';
 import { httpClient } from '@/shared/api/httpClient';
 import { endpoints } from '@/shared/api/endpoints';
+import type { Project, UpdateProjectData } from '@/features/project/model/project';
 
 export function use_public_projects(params: { query: string; status: project_status; page_size: number }) {
   const status_for_key = params.status ?? project_status_const.unspecified;
@@ -52,5 +53,17 @@ export function use_my_projects(opts?: { enabled?: boolean }) {
     },
     enabled: opts?.enabled ?? true,
     retry: false,
+  });
+}
+
+export function use_update_project(): UseMutationResult<Project, Error, UpdateProjectData> {
+  return useMutation<Project, Error, UpdateProjectData>({
+    mutationFn: async (projectData: UpdateProjectData) => {
+      const res = await httpClient.patch(
+        endpoints.projects.update(projectData.project_id),
+        projectData
+      );
+      return res.data;
+    },
   });
 }

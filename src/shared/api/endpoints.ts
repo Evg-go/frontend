@@ -11,5 +11,6 @@ export const endpoints = {
     projects: '/projects',
     projects_public: '/projects/public',
     project_by_id: (project_id: string) => `/projects/${project_id}`,
+    update: (project_id: string) => `/projects/${project_id}`,
   },
 };

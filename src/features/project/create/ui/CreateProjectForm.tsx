@@ -67,7 +67,7 @@ export function CreateProjectForm({ on_created }: Props) {
         finished_at: values.finished_at ? values.finished_at : null,
       });
 
-      // ✅ успех — сбрасываем форму и сообщаем родителю
+      
       form.reset(default_values);
       on_created?.();
     } catch (e) {

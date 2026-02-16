@@ -47,3 +47,7 @@ export const ProjectDetailsPage = lazy(() =>
 export const MyProjectsPage = lazy(() =>
   import('@/pages/projects/ui/MyProjectsPage').then((m) => ({ default: m.MyProjectsPage })),
 );
+
+export const EditProjectPage = lazy(() =>
+  import('@/pages/projects/ui/EditProjectPage').then((m) => ({ default: m.EditProjectPage })),
+);

@@ -76,6 +76,15 @@ export function ProjectDetailsPage() {
             <div className={cls.meta}>
               <span style={{ opacity: 0.7 }}>ID проекта:</span> {id}
             </div>
+
+            {/* Кнопка изменения только если проект не завершен */}
+            {p.status !== 'PROJECT_STATUS_DONE' && p.status !== 'PROJECT_STATUS_ARCHIVED' && (
+              <div className={cls.editButton}>
+                <Link to={`/projects/edit/${p.id}`} className={cls.editButtonLink}>
+                  Изменить проект
+                </Link>
+              </div>
+            )}
           </>
         )}
       </div>
