@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState} from 'react';
 import { Link } from 'react-router-dom';
 import cls from './ProjectsPage.module.css';
 
@@ -9,14 +9,6 @@ import { project_status_label } from '@/entities/project/lib/status';
 
 export function MyProjectsPage() {
   const [query, setQuery] = useState('');
-
-  const params = useMemo(
-    () => ({
-      query,
-      page_size: 10,
-    }),
-    [query],
-  );
 
   const { data: projects, isLoading, isError } = use_my_projects({ enabled: true });
 
@@ -43,8 +35,12 @@ export function MyProjectsPage() {
 
         {!isLoading && !isError && projects?.length > 0 && (
           <div style={{ display: 'grid', gap: 10 }}>
-            {projects.map((p: Project) => (  
-              <Link key={p.id} to={`/projects/${p.id}`} className={cls.item}>
+            {projects.map((p: Project) => (
+                 <Link
+                key={p.id}
+                to={`/projects/${p.id}?from=my-projects`}
+                className={cls.item}
+              >
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                   <b>{p.name}</b>
                   <span>{project_status_label(p.status)}</span>

@@ -1,18 +1,21 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import cls from './ProjectsPage.module.css';
 
-import { use_project } from '@/entities/project/model/hooks';
+import {  use_my_projects, use_project  } from '@/entities/project/model/hooks';
 import { format_date } from '@/entities/project/lib/date';
 import { project_status_label } from '@/entities/project/lib/status';
 
 export function ProjectDetailsPage() {
   const { projectId } = useParams();
   const project_id = projectId ?? '';
-
+ const [searchParams] = useSearchParams();
   const q = use_project(project_id);
 
-  const status_code = (q.error as any)?.status ?? (q.error as any)?.status_code;
-  const p: any = q.data;
+  const { data: my_projects } = use_my_projects({ enabled: true });
+
+  const error_data = q.error as { status?: number; status_code?: number } | null;
+  const status_code = error_data?.status ?? error_data?.status_code;
+  const p = q.data as Record<string, unknown> | undefined;
 
   const status = project_status_label(p?.status);
   const isOpen = Boolean(p?.is_open ?? p?.isOpen);
@@ -25,6 +28,10 @@ export function ProjectDetailsPage() {
   const name = String(p?.name ?? '—');
   const description = String(p?.description ?? '—');
   const id = String(p?.id ?? '—');
+
+  const is_from_my_projects_page = searchParams.get('from') === 'my-projects';
+  const is_user_project = Boolean(my_projects?.some((project: { id: string }) => project.id === project_id));
+  const can_edit_project = is_from_my_projects_page && is_user_project;
 
   return (
     <div className={cls.page}>
@@ -77,8 +84,7 @@ export function ProjectDetailsPage() {
               <span style={{ opacity: 0.7 }}>ID проекта:</span> {id}
             </div>
 
-            {/* Кнопка изменения только если проект не завершен */}
-            {p.status !== 'PROJECT_STATUS_DONE' && p.status !== 'PROJECT_STATUS_ARCHIVED' && (
+             {can_edit_project && (
               <div className={cls.editButton}>
                 <Link to={`/projects/edit/${p.id}`} className={cls.editButtonLink}>
                   Изменить проект
