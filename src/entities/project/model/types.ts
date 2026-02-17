@@ -97,3 +97,26 @@ export function number_to_project_status(number: number): project_status {
   const status = Object.entries(project_status_number).find(([key, value]) => value === number);
   return status ? status[0] as project_status : 'unspecified';  // возвращает строку
 }
+
+export type project_rights = {
+  manager_rights: boolean;
+  manager_member: boolean;
+  manager_projects: boolean;
+  manager_tasks: boolean;
+};
+
+export type project_member = {
+  project_id: string;
+  user_id: string;
+  rights: project_rights;
+};
+
+export type list_project_members_response = {
+  members: project_member[];
+  next_page_token: string;
+};
+
+export type add_project_member_body = {
+  user_id: string;
+  rights?: Partial<project_rights>;
+};

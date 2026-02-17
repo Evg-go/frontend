@@ -3,11 +3,15 @@ import { httpClient } from '@/shared/api/httpClient';
 import type { create_project_payload } from '@/entities/project/api/types';
 
 import type {
+  add_project_member_body,
   create_project_body,
+  list_project_members_response,
   list_public_projects_params,
   list_public_projects_response,
   project,
+  project_member,
   project_public,
+  project_rights,
   project_status,
 } from '@/entities/project/model/types';
 
@@ -126,4 +130,54 @@ export const project_api = {
     // Возвращаем полученные данные, преобразованные в нужный тип
     return map_project(res.data);
   },
+
+    async list_project_members(
+    project_id: string,
+    params?: { page_size?: number; page_token?: string },
+  ): Promise<list_project_members_response> {
+    const res = await httpClient.get(endpoints.projects.project_members(project_id), { params });
+
+    const data = res.data ?? {};
+    return {
+      members: Array.isArray(data.members) ? data.members.map(map_project_member) : [],
+      next_page_token: String(data.next_page_token ?? ''),
+    };
+  },
+
+  async add_project_member(project_id: string, body: add_project_member_body): Promise<project_member> {
+    const payload = {
+      user_id: body.user_id,
+      rights: normalize_project_rights(body.rights),
+    };
+
+    const res = await httpClient.post(endpoints.projects.project_members(project_id), payload);
+    return map_project_member(res.data);
+  },
+
+  async request_join_project(project_id: string): Promise<void> {
+    const payload = {
+      message: 'Хочу вступить в проект',
+    };
+
+    await httpClient.post(endpoints.projects.project_join_requests(project_id), payload);
+  },
 };
+
+
+function normalize_project_rights(in_rights: Partial<project_rights> | undefined): project_rights {
+  return {
+    manager_rights: Boolean(in_rights?.manager_rights),
+    manager_member: Boolean(in_rights?.manager_member),
+    manager_projects: Boolean(in_rights?.manager_projects),
+    manager_tasks: Boolean(in_rights?.manager_tasks),
+  };
+}
+
+function map_project_member(data: any): project_member {
+  return {
+    project_id: String(data.project_id ?? ''),
+    user_id: String(data.user_id ?? ''),
+    rights: normalize_project_rights(data.rights),
+  };
+}
+

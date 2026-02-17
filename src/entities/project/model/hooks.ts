@@ -1,7 +1,7 @@
-import { useInfiniteQuery, useMutation, useQuery, type UseMutationResult } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
 import { project_api } from '@/entities/project/api/projectApi';
 import { project_query_keys, projectQueryKeys } from '@/entities/project/model/queryKeys';
-import type { create_project_body, project_status } from '@/entities/project/model/types';
+import type { add_project_member_body, create_project_body, project_status } from '@/entities/project/model/types';
 import { project_status as project_status_const } from '@/entities/project/model/types';
 import { httpClient } from '@/shared/api/httpClient';
 import { endpoints } from '@/shared/api/endpoints';
@@ -66,5 +66,33 @@ export function use_update_project(): UseMutationResult<Project, Error, update_p
       );
       return res.data;
     },
+  });
+}
+
+export function use_project_members(project_id: string, opts?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: projectQueryKeys.project_members(project_id),
+    queryFn: () => project_api.list_project_members(project_id, { page_size: 100 }),
+    enabled: opts?.enabled ?? Boolean(project_id),
+    retry: false,
+  });
+}
+
+export function use_add_project_member(project_id: string) {
+  const query_client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (body: add_project_member_body) => project_api.add_project_member(project_id, body),
+    retry: false,
+    onSuccess: async () => {
+      await query_client.invalidateQueries({ queryKey: projectQueryKeys.project_members(project_id) });
+    },
+  });
+}
+
+export function use_request_join_project(project_id: string) {
+  return useMutation({
+    mutationFn: async () => project_api.request_join_project(project_id),
+    retry: false,
   });
 }

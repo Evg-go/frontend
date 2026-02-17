@@ -1,7 +1,7 @@
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import cls from './ProjectsPage.module.css';
 
-import {  use_my_projects, use_project  } from '@/entities/project/model/hooks';
+import {  use_my_projects, use_project, use_request_join_project  } from '@/entities/project/model/hooks';
 import { format_date } from '@/entities/project/lib/date';
 import { project_status_label } from '@/entities/project/lib/status';
 
@@ -12,7 +12,8 @@ export function ProjectDetailsPage() {
   const q = use_project(project_id);
 
   const { data: my_projects } = use_my_projects({ enabled: true });
-
+  const join_mutation = use_request_join_project(project_id);
+  
   const error_data = q.error as { status?: number; status_code?: number } | null;
   const status_code = error_data?.status ?? error_data?.status_code;
   const p = q.data as Record<string, unknown> | undefined;
@@ -32,6 +33,20 @@ export function ProjectDetailsPage() {
   const is_from_my_projects_page = searchParams.get('from') === 'my-projects';
   const is_user_project = Boolean(my_projects?.some((project: { id: string }) => project.id === project_id));
   const can_edit_project = is_from_my_projects_page && is_user_project;
+
+  const can_join_project =
+  Boolean(project_id) &&
+  !is_user_project &&
+  // если проект загрузился
+  (q.isError ? status_code === 403 : isOpen);
+
+  const on_join_click = async () => {
+    try {
+      await join_mutation.mutateAsync();
+    } catch {
+
+    }
+  };
 
   return (
     <div className={cls.page}>
@@ -93,6 +108,24 @@ export function ProjectDetailsPage() {
             )}
           </>
         )}
+
+        {can_join_project && (
+          <div className={cls.joinButtonWrap}>
+            <button
+              type="button"
+              className={cls.joinButton}
+              onClick={on_join_click}
+              disabled={join_mutation.isPending || join_mutation.isSuccess}
+            >
+              {join_mutation.isSuccess ? 'Заявка отправлена' : join_mutation.isPending ? 'Отправляю...' : 'Вступить'}
+            </button>
+
+            {join_mutation.isError ? (
+              <div className={cls.joinButtonError}>Не удалось отправить заявку</div>
+            ) : null}
+          </div>
+        )}
+
       </div>
     </div>
   );
