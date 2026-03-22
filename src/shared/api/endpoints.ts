@@ -18,5 +18,9 @@ export const endpoints = {
     project_member_rights: (project_id: string, user_id: string) =>
       `/projects/${project_id}/members/${user_id}/rights`,
     project_join_requests: (project_id: string) => `/projects/${project_id}/join-requests`,
+     project_join_request_approve: (project_id: string, request_id: string) =>
+      `/projects/${project_id}/join-requests/${request_id}/approve`,
+    project_join_request_reject: (project_id: string, request_id: string) =>
+      `/projects/${project_id}/join-requests/${request_id}/reject`,
   },
 };
