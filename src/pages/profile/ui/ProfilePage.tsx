@@ -4,34 +4,36 @@ import cls from './ProfilePage.module.css';
 import { sessionModel } from '@/entities/session/model/session';
 import { useMe } from '@/entities/user/model/useMe';
 import { UpdateProfileForm } from '@/features/user/update-profile/ui/UpdateProfileForm';
+import { ProfileSkillsSection } from '@/features/user/profileSkills/ui/ProfileSkillsSection';
+import { Button } from '@/shared/ui/Button';
 
 export function ProfilePage() {
-  const isAuth = sessionModel.isAuthenticated();
-  const meQuery = useMe({ enabled: isAuth });
-  const [edit, setEdit] = useState(false);
+  const is_auth = sessionModel.isAuthenticated();
+  const me_query = useMe({ enabled: is_auth });
+  const [edit, set_edit] = useState(false);
 
-  if (!isAuth) return <div>Unauthorized</div>;
-  if (meQuery.isLoading) return <div>Loading profile...</div>;
-  if (meQuery.isError) return <div>Failed to load profile</div>;
-  if (!meQuery.data) return <div>No profile data</div>;
+  if (!is_auth) return <div>Unauthorized</div>;
+  if (me_query.isLoading) return <div>Loading profile...</div>;
+  if (me_query.isError) return <div>Failed to load profile</div>;
+  if (!me_query.data) return <div>No profile data</div>;
 
-  const u: any = meQuery.data;
+  const u: any = me_query.data;
 
   const email = u.email ?? '—';
-  const firstName = u.first_name ?? '—';
-  const lastName = u.last_name ?? '—';
+  const first_name = u.first_name ?? '—';
+  const last_name = u.last_name ?? '—';
   const phone = u.phone ?? '—';
 
   const about = u.about ?? '';
-  const isOpen = (u.is_user_open_suggestions ??  false) as boolean;
-  const isHidden = (u.is_profile_hidden ?? false) as boolean;
+  const is_open = (u.is_user_open_suggestions ?? false) as boolean;
+  const is_hidden = (u.is_profile_hidden ?? false) as boolean;
 
   const competence = u.competence_levels;
   const reviews = u.reviews ?? '';
+  const skills = u.skills ?? [];
 
   return (
     <div className={cls.page}>
-      {/* Верхняя карточка: заголовок + кнопка редактирования */}
       <div className={cls.card}>
         <div className={cls.cardHeader}>
           <div>
@@ -40,15 +42,18 @@ export function ProfilePage() {
 
           <div className={cls.actions}>
             {!edit ? (
-              <button onClick={() => setEdit(true)}>Редактировать</button>
+              <Button type="button" variant="secondary" onClick={() => set_edit(true)}>
+                Редактировать
+              </Button>
             ) : (
-              <button onClick={() => setEdit(false)}>Закрыть</button>
+              <Button type="button" variant="secondary" onClick={() => set_edit(false)}>
+                Закрыть
+              </Button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Две колонки */}
       <div className={cls.grid}>
         <div className={cls.card}>
           <h3 className={cls.title}>Основное</h3>
@@ -57,33 +62,38 @@ export function ProfilePage() {
 
         <div className={cls.card}>
           <h3 className={cls.title}>Контакты</h3>
-          <Row label="Имя" value={String(firstName)} />
-          <Row label="Фамилия" value={String(lastName)} />
+          <Row label="Имя" value={String(first_name)} />
+          <Row label="Фамилия" value={String(last_name)} />
           <Row label="Телефон" value={String(phone)} />
         </div>
       </div>
 
-      {/* Широкий модуль на всю ширину */}
       <div className={cls.card}>
         <h3 className={cls.title}>Профиль и настройки</h3>
 
         {!edit ? (
           <div style={{ display: 'grid', gap: 10 }}>
             <Row label="О себе" value={about ? about : '—'} multiline />
-            <Row label="Открыт к предложениям" value={isOpen ? 'Да' : 'Нет'} />
-            <Row label="Профиль скрыт" value={isHidden ? 'Да' : 'Нет'} />
+            <Row label="Открыт к предложениям" value={is_open ? 'Да' : 'Нет'} />
+            <Row label="Профиль скрыт" value={is_hidden ? 'Да' : 'Нет'} />
 
-            <Row label="Компетенции" value={formatCompetence(competence)} multiline />
+            <Row
+              label="Компетенции"
+              value={format_competence(competence)}
+              multiline
+            />
             <Row label="Отзывы" value={reviews ? reviews : '—'} multiline />
           </div>
         ) : (
           <UpdateProfileForm
-            user={meQuery.data}
-            onCancel={() => setEdit(false)}
-            onSaved={() => setEdit(false)}
+            user={me_query.data}
+            onCancel={() => set_edit(false)}
+            onSaved={() => set_edit(false)}
           />
         )}
       </div>
+
+      <ProfileSkillsSection skills={skills} />
     </div>
   );
 }
@@ -105,13 +115,14 @@ function Row({
   );
 }
 
-function formatCompetence(v: unknown): string {
-  if (!v) return '—';
-  if (typeof v !== 'object') return String(v);
+function format_competence(value: unknown): string {
+  if (!value) return '—';
+  if (typeof value !== 'object') return String(value);
 
-  const obj = v as Record<string, unknown>;
+  const obj = value as Record<string, unknown>;
   const entries = Object.entries(obj);
+
   if (entries.length === 0) return '—';
 
-  return entries.map(([k, val]) => `${k}: ${String(val)}`).join('\n');
+  return entries.map(([key, item]) => `${key}: ${String(item)}`).join('\n');
 }

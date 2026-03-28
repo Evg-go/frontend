@@ -1,25 +1,97 @@
-.btn {
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.06);
-  color: var(--text);
-  padding: 10px 12px;
-  border-radius: 12px;
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border-radius: 10px;
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: transform 0.03s ease, background 0.15s ease;
+
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    opacity 0.18s ease,
+    transform 0.06s ease;
 }
 
-.btn:hover { background: rgba(255,255,255,0.09); }
-.btn:active { transform: translateY(1px); }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-.primary {
-  background: rgba(91,157,255,0.18);
-  border-color: rgba(91,157,255,0.35);
+.button:hover {
+  opacity: 0.96;
 }
-.primary:hover { background: rgba(91,157,255,0.26); }
 
-.danger {
-  background: rgba(255,91,91,0.14);
-  border-color: rgba(255,91,91,0.32);
+.button:active {
+  transform: translateY(1px);
 }
-.danger:hover { background: rgba(255,91,91,0.2); }
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.size_sm {
+  min-height: 32px;
+  padding: 7px 12px;
+}
+
+.size_md {
+  min-height: 40px;
+  padding: 10px 14px;
+}
+
+.size_lg {
+  min-height: 46px;
+  padding: 12px 18px;
+}
+
+.full_width {
+  width: 100%;
+}
+
+.variant_primary {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+.variant_primary:hover {
+  background: color-mix(in srgb, var(--text) 88%, white 12%);
+  border-color: color-mix(in srgb, var(--text) 88%, white 12%);
+}
+
+.variant_secondary {
+  border: 1px solid #d0d7de;
+  background: #fff;
+  color: #111827;
+}
+
+.variant_secondary:hover {
+  background: #f8fafc;
+}
+
+.variant_danger {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+}
+
+.variant_danger:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.variant_ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.variant_ghost:hover {
+  background: rgba(255, 255, 255, 0.04);
+}

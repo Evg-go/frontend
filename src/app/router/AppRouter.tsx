@@ -19,6 +19,7 @@ import {
   MyProjectsPage,
   EditProjectPage,
 } from './routes';
+import { EditProfileSkillsPage } from '@/pages/profileSkills/ui/EditProfileSkillsPage';
 
 function PageFallback() {
   return <div>Loading...</div>;
@@ -123,6 +124,8 @@ export function AppRouter() {
 
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
+
+          <Route path="/profile/skills" element={<EditProfileSkillsPage />} />
         </Route>
       </Routes>
     </Suspense>
