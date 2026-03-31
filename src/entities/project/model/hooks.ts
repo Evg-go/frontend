@@ -1,18 +1,36 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
-import { project_api } from '@/entities/project/api/projectApi';
-import { project_query_keys, projectQueryKeys } from '@/entities/project/model/queryKeys';
-import type { add_project_member_body, create_project_body, project_status } from '@/entities/project/model/types';
-import { project_status as project_status_const } from '@/entities/project/model/types';
-import { httpClient } from '@/shared/api/httpClient';
-import { endpoints } from '@/shared/api/endpoints';
-import type { Project} from '@/features/project/model/project';
-import type { update_project_payload } from '../api/types';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseMutationResult,
+} from '@tanstack/react-query';
 
-export function use_public_projects(params: { query: string; status: project_status; page_size: number }) {
+import { project_api } from '@/entities/project/api/projectApi';
+import type { update_project_payload } from '@/entities/project/api/types';
+import { project_query_keys, projectQueryKeys } from '@/entities/project/model/queryKeys';
+import type {
+  add_project_member_body,
+  create_project_body,
+  project_status,
+} from '@/entities/project/model/types';
+import { project_status as project_status_const } from '@/entities/project/model/types';
+import { endpoints } from '@/shared/api/endpoints';
+import { httpClient } from '@/shared/api/httpClient';
+import type { Project } from '@/features/project/model/project';
+
+export function use_public_projects(params: {
+  query: string;
+  status: project_status;
+  page_size: number;
+}) {
   const status_for_key = params.status ?? project_status_const.unspecified;
 
   return useInfiniteQuery({
-    queryKey: project_query_keys.public_list({ query: params.query, status: status_for_key }),
+    queryKey: project_query_keys.public_list({
+      query: params.query,
+      status: status_for_key,
+    }),
     initialPageParam: '',
     queryFn: ({ pageParam }) =>
       project_api.list_public_projects({
@@ -21,7 +39,8 @@ export function use_public_projects(params: { query: string; status: project_sta
         page_size: params.page_size,
         page_token: pageParam ? String(pageParam) : undefined,
       }),
-    getNextPageParam: (last_page) => (last_page.next_page_token ? last_page.next_page_token : undefined),
+    getNextPageParam: (last_page) =>
+      last_page.next_page_token ? last_page.next_page_token : undefined,
   });
 }
 
@@ -45,10 +64,10 @@ export function use_create_project() {
 
 export function use_my_projects(opts?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: projectQueryKeys.list(), 
+    queryKey: projectQueryKeys.list(),
     queryFn: async () => {
       const res = await httpClient.get(endpoints.projects.projects, {
-        params: { query: '', page_size: 10 },  // Параметры для поиска
+        params: { query: '', page_size: 10 },
       });
       return res.data.projects;
     },
@@ -57,14 +76,36 @@ export function use_my_projects(opts?: { enabled?: boolean }) {
   });
 }
 
-export function use_update_project(): UseMutationResult<Project, Error, update_project_payload> {
+export function use_update_project(): UseMutationResult<
+  Project,
+  Error,
+  update_project_payload
+> {
+  const query_client = useQueryClient();
+
   return useMutation<Project, Error, update_project_payload>({
-    mutationFn: async (projectData: update_project_payload) => {
-      const res = await httpClient.patch(
-        endpoints.projects.update(projectData.project_id),
-        projectData
-      );
-      return res.data;
+    mutationFn: async (project_data: update_project_payload) => {
+      return project_api.update_project(project_data);
+    },
+    retry: false,
+    onSuccess: async (_result, variables) => {
+      await Promise.all([
+        query_client.invalidateQueries({
+          queryKey: project_query_keys.root,
+        }),
+        query_client.invalidateQueries({
+          queryKey: projectQueryKeys.list(),
+        }),
+        query_client.invalidateQueries({
+          queryKey: ['projects', 'byId', variables.project_id],
+        }),
+        query_client.invalidateQueries({
+          queryKey: projectQueryKeys.byId(variables.project_id),
+        }),
+        query_client.invalidateQueries({
+          queryKey: projectQueryKeys.project(variables.project_id),
+        }),
+      ]);
     },
   });
 }
@@ -82,10 +123,13 @@ export function use_add_project_member(project_id: string) {
   const query_client = useQueryClient();
 
   return useMutation({
-    mutationFn: (body: add_project_member_body) => project_api.add_project_member(project_id, body),
+    mutationFn: (body: add_project_member_body) =>
+      project_api.add_project_member(project_id, body),
     retry: false,
     onSuccess: async () => {
-      await query_client.invalidateQueries({ queryKey: projectQueryKeys.project_members(project_id) });
+      await query_client.invalidateQueries({
+        queryKey: projectQueryKeys.project_members(project_id),
+      });
     },
   });
 }

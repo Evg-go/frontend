@@ -49,18 +49,31 @@ export function ProjectsPage() {
 
         {!q.isLoading && !q.isError && projects.length > 0 && (
           <div style={{ display: 'grid', gap: 10 }}>
-            {projects.map((p) => (
-              <Link key={p.id} to={`/projects/${p.id}`} className={cls.item}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-                  <b>{p.name}</b>
-                  <span>{project_status_label(p.status)}</span>
-                </div>
-                <div className={cls.itemDesc}>{p.description || '—'}</div>
-                <div style={{ opacity: 0.7, fontSize: 12 }}>
-                  started: {format_date(p.started_at)} • created: {format_date(p.created_at)}
-                </div>
-              </Link>
-            ))}
+            {projects.map((p) => {
+              const started_at_text =
+                p.status === project_status.not_started ? '—' : format_date(p.started_at);
+
+              return (
+                <Link key={p.id} to={`/projects/${p.id}`} className={cls.item}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                    <b>{p.name}</b>
+                    <span>{project_status_label(p.status)}</span>
+                  </div>
+                  <div className={cls.itemDesc}>{p.description || '—'}</div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: 16,
+                        opacity: 0.7,
+                        fontSize: 12,
+                      }}
+                    >
+                      <span>начат: {started_at_text}</span>
+                      <span>создан: {format_date(p.created_at)}</span>
+                    </div>
+                </Link>
+              );
+            })}
           </div>
         )}
 

@@ -1,6 +1,9 @@
 import { endpoints } from '@/shared/api/endpoints';
 import { httpClient } from '@/shared/api/httpClient';
-import type { create_project_payload } from '@/entities/project/api/types';
+import type {
+  create_project_payload,
+  update_project_payload,
+} from '@/entities/project/api/types';
 
 import type {
   add_project_member_body,
@@ -16,29 +19,32 @@ import type {
 } from '@/entities/project/model/types';
 
 import { api_date_to_iso, iso_to_api_date } from '@/entities/project/lib/date';
-import { project_status_to_number, number_to_project_status } from '@/entities/project/model/types';
+import { project_status_to_number } from '@/entities/project/model/types';
 
-// Функция для нормализации статуса, если он приходит как число или строка
-function normalize_project_status(v: unknown): project_status {
-  if (typeof v === 'number') {
-    switch (v) {
-      case 1: return 'not_started';
-      case 2: return 'in_progress';
-      case 3: return 'done';
-      case 4: return 'on_hold';
-      default: return 'unspecified';
+function normalize_project_status(value: unknown): project_status {
+  if (typeof value === 'number') {
+    switch (value) {
+      case 1:
+        return 'not_started';
+      case 2:
+        return 'in_progress';
+      case 3:
+        return 'done';
+      case 4:
+        return 'on_hold';
+      default:
+        return 'unspecified';
     }
   }
 
-  if (typeof v === 'string') {
-    const s = v.toUpperCase();
+  if (typeof value === 'string') {
+    const status = value.toUpperCase();
 
-    if (s.endsWith('NOT_STARTED')) return 'not_started';
-    if (s.endsWith('IN_PROGRESS')) return 'in_progress';
-    if (s.endsWith('DONE')) return 'done';
-    if (s.endsWith('ON_HOLD')) return 'on_hold';
-
-    if (s.endsWith('UNSPECIFIED')) return 'unspecified';
+    if (status.endsWith('NOT_STARTED')) return 'not_started';
+    if (status.endsWith('IN_PROGRESS')) return 'in_progress';
+    if (status.endsWith('DONE')) return 'done';
+    if (status.endsWith('ON_HOLD')) return 'on_hold';
+    if (status.endsWith('UNSPECIFIED')) return 'unspecified';
   }
 
   return 'unspecified';
@@ -52,10 +58,8 @@ function map_project_public(raw: any): project_public {
     description: String(raw.description ?? ''),
     status: normalize_project_status(raw.status),
     is_open: Boolean(raw.is_open),
-
     started_at: api_date_to_iso(raw.started_at),
     finished_at: api_date_to_iso(raw.finished_at),
-
     created_at: api_date_to_iso(raw.created_at),
   };
 }
@@ -65,92 +69,140 @@ function map_project(raw: any): project {
     id: String(raw.id),
     team_id: String(raw.team_id),
     creator_id: String(raw.creator_id),
-
     name: String(raw.name),
     description: String(raw.description ?? ''),
-
     status: normalize_project_status(raw.status),
     is_open: Boolean(raw.is_open),
-
     started_at: api_date_to_iso(raw.started_at),
     finished_at: api_date_to_iso(raw.finished_at),
-
     created_at: api_date_to_iso(raw.created_at),
     updated_at: api_date_to_iso(raw.updated_at),
   };
 }
 
 export const project_api = {
-  // Получение списка проектов с фильтрацией
-  async list_public_projects(params: list_public_projects_params): Promise<list_public_projects_response> {
+  async list_public_projects(
+    params: list_public_projects_params,
+  ): Promise<list_public_projects_response> {
     const search = new URLSearchParams();
 
-    if (params.query) search.set('query', params.query);
+    if (params.query) {
+      search.set('query', params.query);
+    }
 
-    // статус: если UNSPECIFIED/undefined => не шлем
     if (params.status && params.status !== 'unspecified') {
-      // Передаем статус как число
       search.set('status', String(project_status_to_number(params.status)));
     }
 
-    if (params.page_size) search.set('page_size', String(params.page_size));
-    if (params.page_token) search.set('page_token', params.page_token);
+    if (params.page_size) {
+      search.set('page_size', String(params.page_size));
+    }
+
+    if (params.page_token) {
+      search.set('page_token', params.page_token);
+    }
 
     const url = `${endpoints.projects.projects_public}?${search.toString()}`;
-
-     const res = await httpClient.get<list_public_projects_response>(url, { withCredentials: true });
+    const res = await httpClient.get(url, { withCredentials: true });
+    const data = res.data ?? {};
 
     return {
-     projects: Array.isArray(res.data.projects) ? res.data.projects.map(map_project_public) : [],
-      next_page_token: String(res.data.next_page_token ?? ''),
+      projects: Array.isArray(data.projects) ? data.projects.map(map_project_public) : [],
+      next_page_token: String(data.next_page_token ?? ''),
     };
   },
 
-  // Получение проекта по ID
   async get_project(project_id: string): Promise<project> {
     const res = await httpClient.get(endpoints.projects.project_by_id(project_id));
     return map_project(res.data);
   },
 
   async create_project(body: create_project_body): Promise<project> {
-    // Формируем объект payload для отправки на бэк
     const payload: create_project_payload = {
       name: body.name,
       description: body.description ?? '',
-      status: project_status_to_number(body.status),  // Конвертируем статус в число
+      status: project_status_to_number(body.status),
       is_open: body.is_open,
       started_at: iso_to_api_date(body.started_at),
       finished_at: body.finished_at ? iso_to_api_date(body.finished_at) : undefined,
       team_name: body.team_name ?? '',
     };
 
-    // Отправляем запрос на создание проекта
     const res = await httpClient.post(endpoints.projects.projects, payload);
-
-    // Возвращаем полученные данные, преобразованные в нужный тип
     return map_project(res.data);
   },
 
-    async list_project_members(
+  async update_project(body: update_project_payload) {
+    const payload: Record<string, unknown> = {};
+
+    if (body.name !== undefined) {
+      payload.name = body.name;
+    }
+
+    if (body.description !== undefined) {
+      payload.description = body.description;
+    }
+
+    if (body.status !== undefined) {
+      payload.status = body.status;
+    }
+
+    if (body.is_open !== undefined) {
+      payload.is_open = body.is_open;
+    }
+
+    if (body.started_at !== undefined) {
+      payload.started_at = body.started_at;
+    }
+
+    if (body.finished_at !== undefined) {
+      payload.finished_at = body.finished_at;
+    }
+
+    if (body.skills !== undefined) {
+      payload.skills = {
+        ids: body.skills.ids,
+      };
+    }
+
+    const res = await httpClient.patch(
+      endpoints.projects.update(body.project_id),
+      payload,
+    );
+
+    return res.data;
+  },
+
+  async list_project_members(
     project_id: string,
     params?: { page_size?: number; page_token?: string },
   ): Promise<list_project_members_response> {
-    const res = await httpClient.get(endpoints.projects.project_members(project_id), { params });
+    const res = await httpClient.get(endpoints.projects.project_members(project_id), {
+      params,
+    });
 
     const data = res.data ?? {};
+
     return {
       members: Array.isArray(data.members) ? data.members.map(map_project_member) : [],
       next_page_token: String(data.next_page_token ?? ''),
     };
   },
 
-  async add_project_member(project_id: string, body: add_project_member_body): Promise<project_member> {
+  async add_project_member(
+    project_id: string,
+    body: add_project_member_body,
+  ): Promise<project_member> {
     const payload = {
       user_id: body.user_id,
       rights: normalize_project_rights(body.rights),
     };
 
-    const res = await httpClient.post(endpoints.projects.project_members(project_id), payload);
+    const res = await httpClient.post(
+      endpoints.projects.project_members(project_id),
+      payload,
+    );
+
     return map_project_member(res.data);
   },
 
@@ -163,13 +215,14 @@ export const project_api = {
   },
 };
 
-
-function normalize_project_rights(in_rights: Partial<project_rights> | undefined): project_rights {
+function normalize_project_rights(
+  input_rights: Partial<project_rights> | undefined,
+): project_rights {
   return {
-    manager_rights: Boolean(in_rights?.manager_rights),
-    manager_member: Boolean(in_rights?.manager_member),
-    manager_projects: Boolean(in_rights?.manager_projects),
-    manager_tasks: Boolean(in_rights?.manager_tasks),
+    manager_rights: Boolean(input_rights?.manager_rights),
+    manager_member: Boolean(input_rights?.manager_member),
+    manager_projects: Boolean(input_rights?.manager_projects),
+    manager_tasks: Boolean(input_rights?.manager_tasks),
   };
 }
 
@@ -180,4 +233,3 @@ function map_project_member(data: any): project_member {
     rights: normalize_project_rights(data.rights),
   };
 }
-

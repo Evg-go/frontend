@@ -1,0 +1,155 @@
+.root {
+  display: grid;
+  gap: 16px;
+}
+
+.header {
+  display: grid;
+  gap: 4px;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.muted {
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.search_block {
+  display: grid;
+  gap: 10px;
+}
+
+.search_input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #d7dbe3;
+  border-radius: 12px;
+  font: inherit;
+  background: #fff;
+}
+
+.search_input:focus {
+  outline: none;
+  border-color: #9aa4b2;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.06);
+}
+
+.info_row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hint {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.error {
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.search_results {
+  display: grid;
+  gap: 8px;
+}
+
+.result_button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.result_button:hover:not(:disabled) {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.result_button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.result_name {
+  font-weight: 500;
+}
+
+.result_action {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.selected_block {
+  display: grid;
+  gap: 10px;
+}
+
+.selected_title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.empty {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.skills_list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill_chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #f8fafc;
+}
+
+.remove_button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #6b7280;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.remove_button:hover {
+  background: rgba(15, 23, 42, 0.08);
+  color: #111827;
+}

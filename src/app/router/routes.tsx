@@ -57,3 +57,9 @@ export const EditProfileSkillsPage = lazy(() =>
     default: module.EditProfileSkillsPage,
   })),
 );
+
+export const EditProjectSkillsPage = lazy(() =>
+  import('@/pages/projects/ui/EditProjectSkillsPage').then((m) => ({
+    default: m.EditProjectSkillsPage,
+  })),
+);

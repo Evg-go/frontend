@@ -20,4 +20,7 @@ export type update_project_payload = {
   is_open?: boolean;
   started_at?: api_date;
   finished_at?: api_date;
+  skills?: {
+    ids: string[];
+  };
 };
