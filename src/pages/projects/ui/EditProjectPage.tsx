@@ -1,10 +1,10 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import cls from './ProjectsPage.module.css';
+import cls from './EditProjectPage.module.css';
 
 import { use_project, use_update_project } from '@/entities/project/model/hooks';
 import { format_date, iso_to_api_date } from '@/entities/project/lib/date';
@@ -12,6 +12,7 @@ import {
   project_status,
   project_status_to_number,
 } from '@/entities/project/model/types';
+import { toApiError } from '@/shared/api/errors';
 import { Button } from '@/shared/ui/Button';
 
 const schema = z.object({
@@ -65,6 +66,8 @@ export function EditProjectPage() {
   const { data: project, isLoading, isError } = use_project(project_id || '');
   const { mutateAsync: update_project } = use_update_project();
 
+  const [error_message, set_error_message] = useState('');
+
   const default_values = useMemo<Form_values>(
     () => ({
       name: '',
@@ -105,6 +108,8 @@ export function EditProjectPage() {
     }
 
     try {
+      set_error_message('');
+
       const started_at = iso_to_api_date(values.started_at);
 
       const finished_at = values.finished_at
@@ -123,8 +128,13 @@ export function EditProjectPage() {
 
       navigate(`/projects/${project_id}`);
     } catch (error) {
-      console.error('Error updating project:', error);
+      const api_error = toApiError(error);
+      set_error_message(api_error.message);
     }
+  }
+
+  if (!project_id) {
+    return <div>Project id is required</div>;
   }
 
   if (isLoading) return <div>Загрузка...</div>;
@@ -132,37 +142,53 @@ export function EditProjectPage() {
 
   return (
     <div className={cls.page}>
-      <div className={cls.header}>
-        <h3 className={cls.title}>Редактировать проект</h3>
+      <div className={cls.card}>
+        <div className={cls.card_header}>
+          <div>
+            <h1 className={cls.title}>Редактирование проекта</h1>
+            <div className={cls.muted}>
+
+            </div>
+          </div>
+
+          <div className={cls.actions}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => navigate(`/projects/${project_id}`)}
+            >
+              Назад к проекту
+            </Button>
+
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => navigate(`/projects/${project_id}/edit/skills`)}
+            >
+              Редактировать скиллы
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div className={cls.card}>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => navigate(`/projects/${project_id}/edit/skills`)}
-            disabled={!project_id}
-          >
-            Редактировать скиллы
-          </Button>
-        </div>
-
-        <form onSubmit={form.handleSubmit(on_submit)} style={{ display: 'grid', gap: 10 }}>
-          <div>
-            <label>Название</label>
-            <input {...form.register('name')} type="text" />
-            {form.formState.errors.name && <div>{form.formState.errors.name.message}</div>}
+        <form onSubmit={form.handleSubmit(on_submit)} className={cls.form}>
+          <div className={cls.field}>
+            <label className={cls.label}>Название</label>
+            <input {...form.register('name')} type="text" className={cls.input} />
+            {form.formState.errors.name && (
+              <div className={cls.field_error}>{form.formState.errors.name.message}</div>
+            )}
           </div>
 
-          <div>
-            <label>Описание</label>
-            <textarea {...form.register('description')} />
+          <div className={cls.field}>
+            <label className={cls.label}>Описание</label>
+            <textarea {...form.register('description')} className={cls.textarea} rows={5} />
           </div>
 
-          <div>
-            <label>Статус</label>
-            <select {...form.register('status')}>
+          <div className={cls.field}>
+            <label className={cls.label}>Статус</label>
+            <select {...form.register('status')} className={cls.input}>
               <option value={project_status.not_started}>Не начат</option>
               <option value={project_status.in_progress}>В работе</option>
               <option value={project_status.done}>Завершён</option>
@@ -170,26 +196,40 @@ export function EditProjectPage() {
             </select>
           </div>
 
-          <div>
-            <label>Дата начала (YYYY-MM-DD)</label>
-            <input {...form.register('started_at')} type="date" />
-            {form.formState.errors.started_at && <div>{form.formState.errors.started_at.message}</div>}
+          <div className={cls.date_grid}>
+            <div className={cls.field}>
+              <label className={cls.label}>Дата начала</label>
+              <input {...form.register('started_at')} type="date" className={cls.input} />
+              {form.formState.errors.started_at && (
+                <div className={cls.field_error}>{form.formState.errors.started_at.message}</div>
+              )}
+            </div>
+
+            <div className={cls.field}>
+              <label className={cls.label}>Дата завершения (опционально)</label>
+              <input {...form.register('finished_at')} type="date" className={cls.input} />
+              {form.formState.errors.finished_at && (
+                <div className={cls.field_error}>{form.formState.errors.finished_at.message}</div>
+              )}
+            </div>
           </div>
 
-          <div>
-            <label>Дата завершения (опционально)</label>
-            <input {...form.register('finished_at')} type="date" />
-            {form.formState.errors.finished_at && <div>{form.formState.errors.finished_at.message}</div>}
-          </div>
-
-          <div>
-            <label>Открытый проект</label>
+          <label className={cls.checkbox_row}>
             <input {...form.register('is_open')} type="checkbox" />
-          </div>
+            <span>Открытый проект</span>
+          </label>
 
-          <button type="submit" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Сохранение...' : 'Сохранить изменения'}
-          </button>
+          {error_message && <div className={cls.error}>{error_message}</div>}
+
+          <div className={cls.form_actions}>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? 'Сохранение...' : 'Сохранить изменения'}
+            </Button>
+          </div>
         </form>
       </div>
     </div>

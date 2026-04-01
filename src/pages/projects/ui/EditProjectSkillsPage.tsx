@@ -41,8 +41,6 @@ export function EditProjectSkillsPage() {
             <h1 className={cls.title}>Редактирование скиллов проекта</h1>
             <div className={cls.muted}>
               {project_name ? `Проект: ${project_name}. ` : ''}
-              Здесь можно удалить текущие скиллы и добавить новые.
-              Сохранение идёт одним PATCH запросом.
             </div>
           </div>
 

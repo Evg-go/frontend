@@ -12,6 +12,7 @@ type Props = {
   search_placeholder?: string;
   empty_text?: string;
   limit?: number;
+  hide_header?: boolean;
 };
 
 export function SelectSkillsField({
@@ -22,6 +23,7 @@ export function SelectSkillsField({
   search_placeholder = 'Начните вводить название скилла',
   empty_text = 'Скиллы пока не выбраны',
   limit = 60,
+  hide_header = false,
 }: Props) {
   const {
     query,
@@ -48,88 +50,88 @@ export function SelectSkillsField({
 
   return (
     <div className={cls.root}>
-      <div className={cls.header}>
-        <h3 className={cls.title}>{title}</h3>
-        <div className={cls.muted}>{description}</div>
-      </div>
+      {!hide_header && (
+        <div className={cls.header}>
+          <h3 className={cls.title}>{title}</h3>
+          <div className={cls.muted}>{description}</div>
+        </div>
+      )}
 
-      <div className={cls.panel}>
-        <div className={cls.search_block}>
-          <input
-            className={cls.search_input}
-            value={query}
-            onChange={(event) => set_query(event.target.value)}
-            placeholder={search_placeholder}
-          />
+      <div className={cls.search_block}>
+        <input
+          className={cls.search_input}
+          value={query}
+          onChange={(event) => set_query(event.target.value)}
+          placeholder={search_placeholder}
+        />
 
-          <div className={cls.info_row}>
-            <div className={cls.hint}>
-              Выбрано: {selected_skills.length} / {limit}
-            </div>
-
-            {is_limit_reached && (
-              <div className={cls.hint}>Достигнут лимит по количеству скиллов</div>
-            )}
+        <div className={cls.info_row}>
+          <div className={cls.hint}>
+            Выбрано: {selected_skills.length} / {limit}
           </div>
 
-          {is_short_query && (
-            <div className={cls.hint}>Введите минимум 2 символа для поиска</div>
-          )}
-
-          {search_query.isLoading && <div className={cls.hint}>Поиск скиллов...</div>}
-
-          {search_query.isError && (
-            <div className={cls.error}>Не удалось загрузить список скиллов</div>
-          )}
-
-          {available_skills.length > 0 && (
-            <div className={cls.search_results}>
-              {available_skills.map((skill) => (
-                <button
-                  key={get_skill_key(skill)}
-                  type="button"
-                  className={cls.result_button}
-                  onClick={() => add_skill(skill)}
-                  disabled={is_limit_reached}
-                >
-                  <span className={cls.result_name}>{skill.name}</span>
-                  <span className={cls.result_action}>Добавить</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {show_empty_search_result && (
-            <div className={cls.hint}>По этому запросу ничего не найдено</div>
+          {is_limit_reached && (
+            <div className={cls.hint}>Достигнут лимит по количеству скиллов</div>
           )}
         </div>
+
+        {is_short_query && (
+          <div className={cls.hint}>Введите минимум 2 символа для поиска</div>
+        )}
+
+        {search_query.isLoading && (
+          <div className={cls.hint}>Поиск скиллов...</div>
+        )}
+
+        {search_query.isError && (
+          <div className={cls.error}>Не удалось загрузить список скиллов</div>
+        )}
+
+        {available_skills.length > 0 && (
+          <div className={cls.search_results}>
+            {available_skills.map((skill) => (
+              <button
+                key={get_skill_key(skill)}
+                type="button"
+                className={cls.result_button}
+                onClick={() => add_skill(skill)}
+                disabled={is_limit_reached}
+              >
+                <span className={cls.result_name}>{skill.name}</span>
+                <span className={cls.result_action}>Добавить</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {show_empty_search_result && (
+          <div className={cls.hint}>По этому запросу ничего не найдено</div>
+        )}
       </div>
 
-      <div className={cls.panel}>
-        <div className={cls.selected_block}>
-          <div className={cls.selected_title}>Выбранные скиллы</div>
+      <div className={cls.selected_block}>
+        <div className={cls.selected_title}>Выбранные скиллы</div>
 
-          {selected_skills.length === 0 ? (
-            <div className={cls.empty}>{empty_text}</div>
-          ) : (
-            <div className={cls.skills_list}>
-              {selected_skills.map((skill) => (
-                <div key={get_skill_key(skill)} className={cls.skill_chip}>
-                  <span className={cls.skill_name}>{skill.name}</span>
+        {selected_skills.length === 0 ? (
+          <div className={cls.empty}>{empty_text}</div>
+        ) : (
+          <div className={cls.skills_list}>
+            {selected_skills.map((skill) => (
+              <div key={get_skill_key(skill)} className={cls.skill_chip}>
+                <span className={cls.skill_name}>{skill.name}</span>
 
-                  <button
-                    type="button"
-                    className={cls.remove_button}
-                    onClick={() => remove_skill(skill)}
-                    aria-label={`Удалить ${skill.name}`}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <button
+                  type="button"
+                  className={cls.remove_button}
+                  onClick={() => remove_skill(skill)}
+                  aria-label={`Удалить ${skill.name}`}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -64,8 +64,7 @@ export function EditProjectSkillsForm({
         value={selected_skills}
         on_change={set_selected_skills}
         limit={limit}
-        title="Скиллы проекта"
-        description="Подберите нужные скиллы через поиск. При сохранении на сервер уйдёт полный итоговый набор skill_id."
+        hide_header
         search_placeholder="Введите название скилла"
         empty_text="У проекта пока нет скиллов"
       />
