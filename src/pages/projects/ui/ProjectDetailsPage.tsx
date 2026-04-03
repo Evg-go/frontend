@@ -9,60 +9,8 @@ import {
 } from '@/entities/project/model/hooks';
 import { format_date } from '@/entities/project/lib/date';
 import { project_status_label } from '@/entities/project/lib/status';
+import { SkillsChips } from '@/entities/skill/ui/SkillsChips';
 
-function extract_project_skill_names(project: Record<string, unknown> | undefined): string[] {
-  if (!project) return [];
-
-  const raw_skills = Array.isArray(project.skills)
-    ? project.skills
-    : Array.isArray(project.project_skills)
-      ? project.project_skills
-      : Array.isArray(project.skill_list)
-        ? project.skill_list
-        : [];
-
-  const skill_names = raw_skills
-    .map((skill) => {
-      if (typeof skill === 'string') {
-        return skill.trim();
-      }
-
-      if (!skill || typeof skill !== 'object') {
-        return '';
-      }
-
-      const skill_record = skill as Record<string, unknown>;
-
-      if (typeof skill_record.name === 'string') {
-        return skill_record.name.trim();
-      }
-
-      if (typeof skill_record.skill_name === 'string') {
-        return skill_record.skill_name.trim();
-      }
-
-      if (typeof skill_record.title === 'string') {
-        return skill_record.title.trim();
-      }
-
-      if (skill_record.skill && typeof skill_record.skill === 'object') {
-        const nested_skill = skill_record.skill as Record<string, unknown>;
-
-        if (typeof nested_skill.name === 'string') {
-          return nested_skill.name.trim();
-        }
-
-        if (typeof nested_skill.skill_name === 'string') {
-          return nested_skill.skill_name.trim();
-        }
-      }
-
-      return '';
-    })
-    .filter((skill_name): skill_name is string => Boolean(skill_name));
-
-  return Array.from(new Set(skill_names));
-}
 
 export function ProjectDetailsPage() {
   const { projectId } = useParams();
@@ -161,22 +109,11 @@ export function ProjectDetailsPage() {
               <span style={{ opacity: 0.7 }}>ID проекта:</span> {id}
             </div>
             
-            <div className={cls.project_skills_section}>
-              <div className={cls.project_skills_title}>Скиллы проекта</div>
-
-              {project_skills.length > 0 ? (
-                <div className={cls.project_skills_list}>
-                  {project_skills.map((skill) => (
-                    <span key={skill.id} className={cls.project_skill_chip}>
-                      {skill.name}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <div className={cls.project_skills_empty}>Для проекта скиллы не указаны</div>
-              )}
-            </div>
-
+            <SkillsChips
+              title="Скиллы проекта"
+              skills={project_skills}
+              empty_text="Для проекта скиллы не указаны"
+            />
 
             {can_edit_project && (
               <div className={cls.editButton}>
