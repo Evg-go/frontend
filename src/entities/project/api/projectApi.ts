@@ -15,6 +15,7 @@ import type {
   project_member,
   project_public,
   project_rights,
+  project_skill,
   project_status,
 } from '@/entities/project/model/types';
 
@@ -50,6 +51,44 @@ function normalize_project_status(value: unknown): project_status {
   return 'unspecified';
 }
 
+function normalize_skill_ids(raw_skill_ids: unknown): string[] {
+  if (!Array.isArray(raw_skill_ids)) {
+    return [];
+  }
+
+  return raw_skill_ids
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function normalize_project_skills(raw_skills: unknown): project_skill[] {
+  if (!Array.isArray(raw_skills)) {
+    return [];
+  }
+
+  return raw_skills
+    .map((item) => {
+      if (!item || typeof item !== 'object') {
+        return null;
+      }
+
+      const skill = item as Record<string, unknown>;
+      const id = typeof skill.id === 'string' ? skill.id.trim() : '';
+      const name = typeof skill.name === 'string' ? skill.name.trim() : '';
+
+      if (!id || !name) {
+        return null;
+      }
+
+      return {
+        id,
+        name,
+      };
+    })
+    .filter((item): item is project_skill => item !== null);
+}
+
 function map_project_public(raw: any): project_public {
   return {
     id: String(raw.id),
@@ -61,6 +100,8 @@ function map_project_public(raw: any): project_public {
     started_at: api_date_to_iso(raw.started_at),
     finished_at: api_date_to_iso(raw.finished_at),
     created_at: api_date_to_iso(raw.created_at),
+    skill_ids: normalize_skill_ids(raw.skill_ids),
+    skills: normalize_project_skills(raw.skills),
   };
 }
 
@@ -77,6 +118,8 @@ function map_project(raw: any): project {
     finished_at: api_date_to_iso(raw.finished_at),
     created_at: api_date_to_iso(raw.created_at),
     updated_at: api_date_to_iso(raw.updated_at),
+    skill_ids: normalize_skill_ids(raw.skill_ids),
+    skills: normalize_project_skills(raw.skills),
   };
 }
 
@@ -114,6 +157,7 @@ export const project_api = {
 
   async get_project(project_id: string): Promise<project> {
     const res = await httpClient.get(endpoints.projects.project_by_id(project_id));
+    console.log('get_project raw', res.data);
     return map_project(res.data);
   },
 

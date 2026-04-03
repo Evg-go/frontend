@@ -22,6 +22,8 @@ export type project = {
 
   created_at: string | null;
   updated_at: string | null;
+  skill_ids: string[];
+  skills: project_skill[];
 };
 
 // Тип публичного проекта (для списка публичных проектов)
@@ -39,6 +41,14 @@ export type project_public = {
   finished_at: string | null;
 
   created_at: string | null;
+  
+  skill_ids: string[];
+  skills: project_skill[];
+};
+
+export type project_skill = {
+  id: string;
+  name: string;
 };
 
 // Параметры для запроса публичных проектов
@@ -120,3 +130,4 @@ export type add_project_member_body = {
   user_id: string;
   rights?: Partial<project_rights>;
 };
+
