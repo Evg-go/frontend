@@ -60,27 +60,7 @@
 }
 
 .hint {
-  color: var(--muted);ф.root {
-  display: grid;
-  gap: 14px;
-}
-
-.error {
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(220, 38, 38, 0.28);
-  background: rgba(220, 38, 38, 0.08);
-  color: #fca5a5;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
-}
+  color: var(--muted);
   font-size: 13px;
   line-height: 1.4;
 }
@@ -202,6 +182,13 @@
 .remove_button:hover {
   background: rgba(255, 255, 255, 0.1);
   color: inherit;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 900px) {

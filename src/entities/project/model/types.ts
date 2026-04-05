@@ -44,6 +44,7 @@ export type project_public = {
   
   skill_ids: string[];
   skills: project_skill[];
+  profile_skill_match_percent: number | null;
 };
 
 export type project_skill = {
@@ -57,6 +58,10 @@ export type list_public_projects_params = {
   status?: project_status;  // Строка, например 'not_started', 'done', или 'unspecified'
   page_size?: number;
   page_token?: string;
+  skill_ids?: string[];
+  skill_match_mode?: project_skill_match_mode;
+  sort_by?: project_sort_by;
+  sort_order?: sort_order;
 };
 
 // Ответ на запрос публичных проектов
@@ -131,3 +136,29 @@ export type add_project_member_body = {
   rights?: Partial<project_rights>;
 };
 
+export const project_skill_match_mode = {
+  unspecified: 'unspecified',
+  any: 'any',
+  all: 'all',
+} as const;
+
+export type project_skill_match_mode =
+  (typeof project_skill_match_mode)[keyof typeof project_skill_match_mode];
+
+export const project_sort_by = {
+  unspecified: 'unspecified',
+  created_at: 'created_at',
+  started_at: 'started_at',
+  profile_skill_match: 'profile_skill_match',
+} as const;
+
+export type project_sort_by =
+  (typeof project_sort_by)[keyof typeof project_sort_by];
+
+export const sort_order = {
+  unspecified: 'unspecified',
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
+export type sort_order = (typeof sort_order)[keyof typeof sort_order];

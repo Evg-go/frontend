@@ -9,10 +9,18 @@ import {
 import { project_api } from '@/entities/project/api/projectApi';
 import type { update_project_payload } from '@/entities/project/api/types';
 import { project_query_keys, projectQueryKeys } from '@/entities/project/model/queryKeys';
+import  {
+  project_skill_match_mode,
+  project_sort_by,
+  sort_order,
+} from '@/entities/project/model/types';
 import type {
   add_project_member_body,
   create_project_body,
+  project_sort_by as project_sort_by_type,
   project_status,
+  sort_order as sort_order_type,
+  project_skill_match_mode as project_skill_match_mode_type,
 } from '@/entities/project/model/types';
 import { project_status as project_status_const } from '@/entities/project/model/types';
 import { endpoints } from '@/shared/api/endpoints';
@@ -23,13 +31,27 @@ export function use_public_projects(params: {
   query: string;
   status: project_status;
   page_size: number;
+  skill_ids?: string[];
+  skill_match_mode?: project_skill_match_mode_type;
+  sort_by?: project_sort_by_type;
+  sort_order?: sort_order_type;
 }) {
   const status_for_key = params.status ?? project_status_const.unspecified;
+  const skill_ids_for_key = (params.skill_ids ?? []).filter(Boolean).sort();
+  const skill_match_mode_for_key =
+    params.skill_match_mode ?? project_skill_match_mode.unspecified;
+  const sort_by_for_key = params.sort_by ?? project_sort_by.created_at;
+  const sort_order_for_key = params.sort_order ?? sort_order.desc;
 
   return useInfiniteQuery({
     queryKey: project_query_keys.public_list({
       query: params.query,
       status: status_for_key,
+      skill_ids: skill_ids_for_key,
+      skill_match_mode: skill_match_mode_for_key,
+      sort_by: sort_by_for_key,
+      sort_order: sort_order_for_key,
+      page_size: params.page_size,
     }),
     initialPageParam: '',
     queryFn: ({ pageParam }) =>
@@ -38,6 +60,13 @@ export function use_public_projects(params: {
         status: status_for_key,
         page_size: params.page_size,
         page_token: pageParam ? String(pageParam) : undefined,
+        skill_ids: skill_ids_for_key,
+        skill_match_mode:
+          skill_ids_for_key.length > 0
+            ? skill_match_mode_for_key
+            : project_skill_match_mode.unspecified,
+        sort_by: sort_by_for_key,
+        sort_order: sort_order_for_key,
       }),
     getNextPageParam: (last_page) =>
       last_page.next_page_token ? last_page.next_page_token : undefined,

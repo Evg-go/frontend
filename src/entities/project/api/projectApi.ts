@@ -5,6 +5,13 @@ import type {
   update_project_payload,
 } from '@/entities/project/api/types';
 
+import {
+  project_skill_match_mode,
+  project_sort_by,
+  project_status_to_number,
+  sort_order,
+} from '@/entities/project/model/types';
+
 import type {
   add_project_member_body,
   create_project_body,
@@ -15,12 +22,14 @@ import type {
   project_member,
   project_public,
   project_rights,
-  project_skill,
   project_status,
+  project_skill_match_mode as project_skill_match_mode_type,
+  project_skill,
+  project_sort_by as project_sort_by_type,
+  sort_order as sort_order_type,
 } from '@/entities/project/model/types';
 
 import { api_date_to_iso, iso_to_api_date } from '@/entities/project/lib/date';
-import { project_status_to_number } from '@/entities/project/model/types';
 
 function normalize_project_status(value: unknown): project_status {
   if (typeof value === 'number') {
@@ -49,6 +58,19 @@ function normalize_project_status(value: unknown): project_status {
   }
 
   return 'unspecified';
+}
+
+function project_skill_match_mode_to_number(
+  value: project_skill_match_mode_type,
+): number {
+  switch (value) {
+    case project_skill_match_mode.any:
+      return 1;
+    case project_skill_match_mode.all:
+      return 2;
+    default:
+      return 0;
+  }
 }
 
 function normalize_skill_ids(raw_skill_ids: unknown): string[] {
@@ -102,6 +124,9 @@ function map_project_public(raw: any): project_public {
     created_at: api_date_to_iso(raw.created_at),
     skill_ids: normalize_skill_ids(raw.skill_ids),
     skills: normalize_project_skills(raw.skills),
+    profile_skill_match_percent: normalize_profile_skill_match_percent(
+      raw.profile_skill_match_percent,
+    ),
   };
 }
 
@@ -124,6 +149,7 @@ function map_project(raw: any): project {
 }
 
 export const project_api = {
+
   async list_public_projects(
     params: list_public_projects_params,
   ): Promise<list_public_projects_response> {
@@ -143,6 +169,34 @@ export const project_api = {
 
     if (params.page_token) {
       search.set('page_token', params.page_token);
+    }
+
+    if (params.skill_ids && params.skill_ids.length > 0) {
+      params.skill_ids.forEach((skill_id) => {
+        if (skill_id) {
+          search.append('skill_ids', skill_id);
+        }
+      });
+    }
+
+    if (
+      params.skill_ids &&
+      params.skill_ids.length > 0 &&
+      params.skill_match_mode &&
+      params.skill_match_mode !== project_skill_match_mode.unspecified
+    ) {
+      search.set(
+        'skill_match_mode',
+        String(project_skill_match_mode_to_number(params.skill_match_mode)),
+      );
+    }
+
+    if (params.sort_by && params.sort_by !== project_sort_by.unspecified) {
+      search.set('sort_by', String(project_sort_by_to_number(params.sort_by)));
+    }
+
+    if (params.sort_order && params.sort_order !== sort_order.unspecified) {
+      search.set('sort_order', String(sort_order_to_number(params.sort_order)));
     }
 
     const url = `${endpoints.projects.projects_public}?${search.toString()}`;
@@ -276,4 +330,37 @@ function map_project_member(data: any): project_member {
     user_id: String(data.user_id ?? ''),
     rights: normalize_project_rights(data.rights),
   };
+}
+
+function project_sort_by_to_number(value: project_sort_by_type): number {
+  switch (value) {
+    case project_sort_by.created_at:
+      return 1;
+    case project_sort_by.started_at:
+      return 2;
+    case project_sort_by.profile_skill_match:
+      return 3;
+    default:
+      return 0;
+  }
+}
+
+function sort_order_to_number(value: sort_order_type): number {
+  switch (value) {
+    case sort_order.asc:
+      return 1;
+    case sort_order.desc:
+      return 2;
+    default:
+      return 0;
+  }
+}
+
+function normalize_profile_skill_match_percent(value: unknown): number | null {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return null;
+  }
+
+  const normalized = Math.max(0, Math.min(100, Math.round(value)));
+  return normalized;
 }
